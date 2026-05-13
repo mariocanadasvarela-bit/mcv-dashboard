@@ -1,277 +1,473 @@
-// app.js - MCV Seguros Dashboard - Versión final con todas las correcciones y mejoras
-const POLIZAS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTizUhGOMK4CqFeegbAtWciBpS29ZZ8fvqaednZUMlwOFMZ9lzK0-0PpcJyacyifXeSJazpTIcLqL2q/pub?gid=0&single=true&output=csv';
-const ITEMS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTizUhGOMK4CqFeegbAtWciBpS29ZZ8fvqaednZUMlwOFMZ9lzK0-0PpcJyacyifXeSJazpTIcLqL2q/pub?gid=1897816776&single=true&output=csv';
+// app.js - MCV Seguros Dashboard - Versión definitiva con datos embebidos (sin dependencia de CSVs)
+const tipoCambioUSD = 1200; // valor fijo, se puede actualizar con API si se desea
 
 let polizasData = [];
 let itemsData = [];
-let tipoCambioUSD = 1200;
 let charts = {};
 let currentTab = 'recurrente';
-let currentEmpresa = 'GHM SRL';   // solo para recurrentes
+let currentEmpresa = 'GHM SRL';
 let currentRamoFiltro = null;
 let currentPolizaSearch = '';
 
-// ======================== DATOS CORREGIDOS POR PÓLIZA (sobrescriben CSV) ========================
-// Estructura: key = número real de póliza (string)
-const correcciones = new Map();
+// ======================== DATOS CORREGIDOS (fuente principal) ========================
+// Estructura: cada entrada tiene los datos de la póliza y sus items
+const polizasCorregidas = [
+    // 1) 68280884
+    {
+        nro_poliza: '68280884',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Automotor',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 428549,
+        costo_mensual_usd: 0,
+        vigencia_desde: '27/04/2026',
+        vigencia_hasta: '27/07/2026',
+        cobertura_corta: 'Privilegio L2 (completo)',
+        items: [
+            { item: 'TOYOTA HILUX L/25 2.8 DC 4X4 TDI SRV+ AT6 2026 - AI002UK', identificacion: 'AI002UK', suma_ars: 79838000, suma_usd: 0 },
+            { item: 'TOYOTA HILUX L/25 2.8 DC 4X4 TDI SRV+ AT6 2026 - AI002UJ', identificacion: 'AI002UJ', suma_ars: 79838000, suma_usd: 0 }
+        ]
+    },
+    // 2) 58881286
+    {
+        nro_poliza: '58881286',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Automotor',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 201561.17,
+        costo_mensual_usd: 0,
+        vigencia_desde: '05/04/2026',
+        vigencia_hasta: '05/07/2026',
+        cobertura_corta: 'Privilegio L2 (completo)',
+        items: [
+            { item: 'TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR', identificacion: 'AF353UN', suma_ars: 45000000, suma_usd: 0 }
+        ]
+    },
+    // 3) 58845801
+    {
+        nro_poliza: '58845801',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Automotor',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 184357,
+        costo_mensual_usd: 0,
+        vigencia_desde: '26/02/2026',
+        vigencia_hasta: '26/05/2026',
+        cobertura_corta: 'Privilegio L2 para Nissan / Arranque L2 para Trailer',
+        items: [
+            { item: 'Trailer', identificacion: '101AF981GW', suma_ars: 0, suma_usd: 0, solo_rc: true },
+            { item: 'Nissan Frontier', identificacion: 'AP981GW', suma_ars: 45000000, suma_usd: 0 }
+        ]
+    },
+    // 4) 58881287
+    {
+        nro_poliza: '58881287',
+        tomador: 'GHM SRL',
+        empresa: 'GHM SRL',
+        pagador: 'GHM SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Automotor',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 698123,
+        costo_mensual_usd: 0,
+        vigencia_desde: '05/04/2026',
+        vigencia_hasta: '05/07/2026',
+        cobertura_corta: 'Privilegio L2 para autos / Arranque L2 para trailer',
+        items: [
+            { item: 'Toyota Hilux 2019', identificacion: 'AD571CC', suma_ars: 38500000, suma_usd: 0 },
+            { item: 'Toyota Hilux 2017', identificacion: 'AB210EX', suma_ars: 37300000, suma_usd: 0 },
+            { item: 'Toyota Hilux SW4 2018', identificacion: 'AC899XO', suma_ars: 45000000, suma_usd: 0 },
+            { item: 'Trailer', identificacion: '101AB210EX', suma_ars: 0, suma_usd: 0, solo_rc: true }
+        ]
+    },
+    // 5) 58844225
+    {
+        nro_poliza: '58844225',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Automotor',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 15905,
+        costo_mensual_usd: 0,
+        vigencia_desde: '14/02/2026',
+        vigencia_hasta: '14/05/2026',
+        cobertura_corta: 'Arranque L2 (solo RC)',
+        items: [
+            { item: 'Trailer', identificacion: '101AF353UN', suma_ars: 0, suma_usd: 0, solo_rc: true }
+        ]
+    },
+    // 6) 58844224
+    {
+        nro_poliza: '58844224',
+        tomador: 'GHM SRL',
+        empresa: 'GHM SRL',
+        pagador: 'GHM SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Automotor',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 15905,
+        costo_mensual_usd: 0,
+        vigencia_desde: '14/02/2026',
+        vigencia_hasta: '14/05/2026',
+        cobertura_corta: 'Arranque L2 (solo RC)',
+        items: [
+            { item: 'Trailer', identificacion: '101AD571CC', suma_ars: 0, suma_usd: 0, solo_rc: true }
+        ]
+    },
+    // 7) 67844592
+    {
+        nro_poliza: '67844592',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Automotor',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 15336,
+        costo_mensual_usd: 0,
+        vigencia_desde: '17/02/2026',
+        vigencia_hasta: '17/05/2026',
+        cobertura_corta: 'Arranque L2 (solo RC)',
+        items: [
+            { item: 'Trailer', identificacion: '101AF981GW', suma_ars: 0, suma_usd: 0, solo_rc: true }
+        ]
+    },
+    // 8) 41789769
+    {
+        nro_poliza: '41789769',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Cuatriciclo',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 33358,
+        costo_mensual_usd: 0,
+        vigencia_desde: '05/03/2026',
+        vigencia_hasta: '05/06/2026',
+        cobertura_corta: 'Plan Nro. 25 – solo siniestros totales',
+        items: [
+            { item: 'Cuatriciclo', identificacion: '419HXK', suma_ars: 13807159, suma_usd: 0 }
+        ]
+    },
+    // 9) 45598579
+    {
+        nro_poliza: '45598579',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Moto',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 57241,
+        costo_mensual_usd: 0,
+        vigencia_desde: '28/02/2026',
+        vigencia_hasta: '31/05/2026',
+        cobertura_corta: 'Selecto L2 (completo)',
+        items: [
+            { item: 'Beta Zontes 368 G', identificacion: 'A269GYK', suma_ars: 11246000, suma_usd: 0 }
+        ]
+    },
+    // 10) 40156645
+    {
+        nro_poliza: '40156645',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Seguro Técnico',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 12609,
+        costo_mensual_usd: 0,
+        vigencia_desde: '18/02/2026',
+        vigencia_hasta: '18/08/2026',
+        cobertura_corta: 'Seguro Técnico – Equipo de contratista',
+        items: [
+            { item: 'Moto de nieve SKI DOO 1', identificacion: 'N° serie no especificado', suma_ars: 4262287, suma_usd: 0 },
+            { item: 'Moto de nieve SKI DOO 2', identificacion: 'N° serie no especificado', suma_ars: 5732041, suma_usd: 0 }
+        ]
+    },
+    // 11) 40194044
+    {
+        nro_poliza: '40194044',
+        tomador: 'GHM SRL',
+        empresa: 'GHM SRL',
+        pagador: 'GHM SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Robo',
+        aseguradora: 'La Segunda',
+        costo_mensual_ars: 18008,
+        costo_mensual_usd: 0,
+        vigencia_desde: '10/01/2026',
+        vigencia_hasta: '10/07/2026',
+        cobertura_corta: 'Robo exclusivo (excluye hurto)',
+        items: [
+            { item: 'Equipos fotográficos', identificacion: 'N/A', suma_ars: 1500000, suma_usd: 0 }
+        ]
+    },
+    // 12) 352086 (ART GHM Satelital)
+    {
+        nro_poliza: '352086',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'ART',
+        aseguradora: 'La Segunda ART',
+        costo_mensual_ars: 439468,
+        costo_mensual_usd: 0,
+        vigencia_desde: '01/09/2023',
+        vigencia_hasta: '31/12/2026',
+        cobertura_corta: 'ART – Ley 24.557 (riesgos del trabajo)',
+        items: [
+            { item: '6 trabajadores', identificacion: 'CIIU 614090', suma_ars: 0, suma_usd: 0, es_prestacional: true }
+        ]
+    },
+    // 13) 350751 (ART GHM SRL)
+    {
+        nro_poliza: '350751',
+        tomador: 'GHM SRL',
+        empresa: 'GHM SRL',
+        pagador: 'GHM SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'ART',
+        aseguradora: 'La Segunda ART',
+        costo_mensual_ars: 500164,
+        costo_mensual_usd: 0,
+        vigencia_desde: '01/08/2023',
+        vigencia_hasta: '31/12/2026',
+        cobertura_corta: 'ART – Ley 24.557 (riesgos del trabajo)',
+        items: [
+            { item: '14 trabajadores', identificacion: 'CIIU 591110', suma_ars: 0, suma_usd: 0, es_prestacional: true }
+        ]
+    },
+    // 14) 54001250
+    {
+        nro_poliza: '54001250',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Vida Colectivo',
+        aseguradora: 'La Segunda Personas',
+        costo_mensual_ars: 23135.76,
+        costo_mensual_usd: 0,
+        vigencia_desde: '01/03/2026',
+        vigencia_hasta: '01/03/2027',
+        cobertura_corta: 'Vida Colectivo – Fallecimiento e Invalidez (Provincial San Juan)',
+        items: [
+            { item: '8 asegurados', identificacion: 'Provincial San Juan', suma_ars: 2400000, suma_usd: 0 }
+        ]
+    },
+    // 15) 54001127
+    {
+        nro_poliza: '54001127',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Vida Colectivo',
+        aseguradora: 'La Segunda Personas',
+        costo_mensual_ars: 18760,
+        costo_mensual_usd: 0,
+        vigencia_desde: '01/05/2026',
+        vigencia_hasta: '01/03/2027',
+        cobertura_corta: 'Vida Colectivo – Fallecimiento e Invalidez (Ley Contrato Trabajo)',
+        items: [
+            { item: '8 asegurados', identificacion: 'Ley 20.744', suma_ars: 25968503.98, suma_usd: 0 }
+        ]
+    },
+    // 16) 55004187
+    {
+        nro_poliza: '55004187',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Vida Colectivo',
+        aseguradora: 'La Segunda Personas',
+        costo_mensual_ars: 2984.34,
+        costo_mensual_usd: 0,
+        vigencia_desde: '01/03/2026',
+        vigencia_hasta: '01/03/2027',
+        cobertura_corta: 'Vida Colectivo – Fallecimiento (Decreto 1567/74)',
+        items: [
+            { item: '7 asegurados', identificacion: 'No Doméstico', suma_ars: 14499100, suma_usd: 0 }
+        ]
+    },
+    // 17) 54001267
+    {
+        nro_poliza: '54001267',
+        tomador: 'GHM SRL',
+        empresa: 'GHM SRL',
+        pagador: 'GHM SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Vida Colectivo',
+        aseguradora: 'La Segunda Personas',
+        costo_mensual_ars: 3373,
+        costo_mensual_usd: 0,
+        vigencia_desde: '01/03/2026',
+        vigencia_hasta: '01/03/2027',
+        cobertura_corta: 'Vida Colectivo – Fallecimiento e Invalidez (Provincial San Juan)',
+        items: [
+            { item: '14 asegurados', identificacion: 'Provincial San Juan', suma_ars: 4200000, suma_usd: 0 }
+        ]
+    },
+    // 18) 54001112
+    {
+        nro_poliza: '54001112',
+        tomador: 'GHM SRL',
+        empresa: 'GHM SRL',
+        pagador: 'GHM SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Vida Colectivo',
+        aseguradora: 'La Segunda Personas',
+        costo_mensual_ars: 63830,
+        costo_mensual_usd: 0,
+        vigencia_desde: '01/05/2026',
+        vigencia_hasta: '01/03/2027',
+        cobertura_corta: 'Vida Colectivo – Fallecimiento e Invalidez (Ley Contrato Trabajo)',
+        items: [
+            { item: '13 asegurados', identificacion: 'Ley 20.744', suma_ars: 87302247.98, suma_usd: 0 }
+        ]
+    },
+    // 19) 55004186
+    {
+        nro_poliza: '55004186',
+        tomador: 'GHM SRL',
+        empresa: 'GHM SRL',
+        pagador: 'GHM SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Vida Colectivo',
+        aseguradora: 'La Segunda Personas',
+        costo_mensual_ars: 2984.34,
+        costo_mensual_usd: 0,
+        vigencia_desde: '01/03/2026',
+        vigencia_hasta: '01/03/2027',
+        cobertura_corta: 'Vida Colectivo – Fallecimiento (Decreto 1567/74)',
+        items: [
+            { item: '13 asegurados', identificacion: 'No Doméstico', suma_ars: 26926900, suma_usd: 0 }
+        ]
+    },
+    // 20) 4089566 (RC Comprensiva)
+    {
+        nro_poliza: '4089566',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'RC Comprensiva',
+        aseguradora: 'Federación Patronal',
+        costo_mensual_ars: 36034.08,
+        costo_mensual_usd: 0,
+        vigencia_desde: '26/03/2026',
+        vigencia_hasta: '26/03/2027',
+        cobertura_corta: 'RC Comprensiva – Instalación/mantenimiento sistemas de comunicación',
+        items: []
+    },
+    // 21) Caución 1239222
+    {
+        nro_poliza: '1239222',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Caución',
+        aseguradora: 'Aseguradores de Cauciones',
+        costo_mensual_ars: 48553.8,
+        costo_mensual_usd: 0,
+        vigencia_desde: '15/05/2026',
+        vigencia_hasta: '15/08/2026',
+        cobertura_corta: 'Caución por Adjudicación – Garantía mantenimiento cámaras 4K',
+        items: [
+            { item: 'Servicio cámaras 4K', identificacion: 'Expte. 1100-000717-2025', suma_ars: 3165500, suma_usd: 0 }
+        ]
+    },
+    // 22) Caución 1234850
+    {
+        nro_poliza: '1234850',
+        tomador: 'GHM SRL',
+        empresa: 'GHM SRL',
+        pagador: 'GHM SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Caución',
+        aseguradora: 'Aseguradores de Cauciones',
+        costo_mensual_ars: 0,
+        costo_mensual_usd: 203.04,
+        vigencia_desde: '11/05/2026',
+        vigencia_hasta: '11/08/2026',
+        cobertura_corta: 'Caución por Anticipo – Stand Fiesta del Sol',
+        items: [
+            { item: 'Stand Fiesta del Sol', identificacion: 'Pedido 4501322401', suma_ars: 0, suma_usd: 27500 }
+        ]
+    },
+    // 23) Caución 1234845
+    {
+        nro_poliza: '1234845',
+        tomador: 'GHM SRL',
+        empresa: 'GHM SRL',
+        pagador: 'GHM SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Caución',
+        aseguradora: 'Aseguradores de Cauciones',
+        costo_mensual_ars: 0,
+        costo_mensual_usd: 204.36,
+        vigencia_desde: '11/05/2026',
+        vigencia_hasta: '11/08/2026',
+        cobertura_corta: 'Caución por Anticipo – Stand Fiesta del Sol',
+        items: [
+            { item: 'Stand Fiesta del Sol', identificacion: 'Pedido 4501322193', suma_ars: 0, suma_usd: 27694.35 }
+        ]
+    },
+    // 24) Caución 1233958
+    {
+        nro_poliza: '1233958',
+        tomador: 'GHM Satelital SRL',
+        empresa: 'GHM Satelital SRL',
+        pagador: 'GHM Satelital SRL',
+        proyecto_norm: 'estructura operativa',
+        ramo: 'Caución',
+        aseguradora: 'Aseguradores de Cauciones',
+        costo_mensual_ars: 79019.4,
+        costo_mensual_usd: 0,
+        vigencia_desde: '22/10/2025',
+        vigencia_hasta: '22/01/2026',
+        cobertura_corta: 'Caución por Mantenimiento de Oferta – Garantía cámaras',
+        items: [
+            { item: 'Mantenimiento cámaras', identificacion: 'Licitación 04/2025', suma_ars: 711100, suma_usd: 0 }
+        ]
+    }
+];
 
-// 1) 68280884
-correcciones.set('68280884', {
-    premio_ars: 428549,
-    suma_asegurada_total: 159676000,
-    cobertura_corta: 'Privilegio L2 (completo)',
-    vigencia_desde: '27/04/2026',
-    vigencia_hasta: '27/07/2026',
-    items: [
-        { item: 'TOYOTA HILUX L/25 2.8 DC 4X4 TDI SRV+ AT6 2026 - AI002UK', identificacion: 'AI002UK', suma_ars: 79838000, suma_usd: 0 },
-        { item: 'TOYOTA HILUX L/25 2.8 DC 4X4 TDI SRV+ AT6 2026 - AI002UJ', identificacion: 'AI002UJ', suma_ars: 79838000, suma_usd: 0 }
-    ]
-});
-// 2) 58881286
-correcciones.set('58881286', {
-    premio_ars: 201561.17,
-    suma_asegurada_total: 45000000,
-    cobertura_corta: 'Privilegio L2 (completo)',
-    vigencia_desde: '05/04/2026',
-    vigencia_hasta: '05/07/2026',
-    items: [
-        { item: 'TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR', identificacion: 'AF353UN', suma_ars: 45000000, suma_usd: 0 }
-    ]
-});
-// 3) 58845801
-correcciones.set('58845801', {
-    premio_ars: 184357,
-    suma_asegurada_total: 45000000, // solo la Nissan, el trailer es solo RC
-    cobertura_corta: 'Privilegio L2 para Nissan / Arranque L2 para Trailer',
-    vigencia_desde: '26/02/2026',
-    vigencia_hasta: '26/05/2026',
-    items: [
-        { item: 'Trailer', identificacion: '101AF981GW', suma_ars: 0, suma_usd: 0, solo_rc: true },
-        { item: 'Nissan Frontier', identificacion: 'AP981GW', suma_ars: 45000000, suma_usd: 0 }
-    ]
-});
-// 4) 58881287
-correcciones.set('58881287', {
-    premio_ars: 698123,
-    suma_asegurada_total: 38500000 + 37300000 + 45000000, // Corregido
-    cobertura_corta: 'Privilegio L2 para autos / Arranque L2 para trailer',
-    vigencia_desde: '05/04/2026',
-    vigencia_hasta: '05/07/2026',
-    items: [
-        { item: 'Toyota Hilux 2019', identificacion: 'AD571CC', suma_ars: 38500000, suma_usd: 0 },
-        { item: 'Toyota Hilux 2017', identificacion: 'AB210EX', suma_ars: 37300000, suma_usd: 0 },
-        { item: 'Toyota Hilux SW4 2018', identificacion: 'AC899XO', suma_ars: 45000000, suma_usd: 0 },
-        { item: 'Trailer', identificacion: '101AB210EX', suma_ars: 0, suma_usd: 0, solo_rc: true }
-    ]
-});
-// 5) 58844225
-correcciones.set('58844225', {
-    premio_ars: 15905,
-    suma_asegurada_total: 0, // solo RC
-    cobertura_corta: 'Arranque L2 (solo RC)',
-    vigencia_desde: '14/02/2026',
-    vigencia_hasta: '14/05/2026',
-    items: [
-        { item: 'Trailer', identificacion: '101AF353UN', suma_ars: 0, suma_usd: 0, solo_rc: true }
-    ]
-});
-// 6) 58844224
-correcciones.set('58844224', {
-    premio_ars: 15905,
-    suma_asegurada_total: 0,
-    cobertura_corta: 'Arranque L2 (solo RC)',
-    vigencia_desde: '14/02/2026',
-    vigencia_hasta: '14/05/2026',
-    items: [
-        { item: 'Trailer', identificacion: '101AD571CC', suma_ars: 0, suma_usd: 0, solo_rc: true }
-    ]
-});
-// 7) 67844592
-correcciones.set('67844592', {
-    premio_ars: 15336,
-    suma_asegurada_total: 0,
-    cobertura_corta: 'Arranque L2 (solo RC)',
-    vigencia_desde: '17/02/2026',
-    vigencia_hasta: '17/05/2026',
-    items: [
-        { item: 'Trailer', identificacion: '101AF981GW', suma_ars: 0, suma_usd: 0, solo_rc: true }
-    ]
-});
-// 8) 41789769
-correcciones.set('41789769', {
-    premio_ars: 33358,
-    suma_asegurada_total: 13807159,
-    cobertura_corta: 'Plan Nro. 25 – solo siniestros totales',
-    vigencia_desde: '05/03/2026',
-    vigencia_hasta: '05/06/2026',
-    items: [
-        { item: 'Cuatriciclo', identificacion: '419HXK', suma_ars: 13807159, suma_usd: 0 }
-    ]
-});
-// 9) 45598579
-correcciones.set('45598579', {
-    premio_ars: 57241,
-    suma_asegurada_total: 11246000,
-    cobertura_corta: 'Selecto L2 (completo)',
-    vigencia_desde: '28/02/2026',
-    vigencia_hasta: '31/05/2026',
-    items: [
-        { item: 'Beta Zontes 368 G', identificacion: 'A269GYK', suma_ars: 11246000, suma_usd: 0 }
-    ]
-});
-// 10) 40156645
-correcciones.set('40156645', {
-    premio_ars: 12609,
-    suma_asegurada_total: 4262287 + 5732041 = 9994328,
-    cobertura_corta: 'Seguro Técnico – Equipo de contratista',
-    vigencia_desde: '18/02/2026',
-    vigencia_hasta: '18/08/2026',
-    items: [
-        { item: 'Moto de nieve SKI DOO 1', identificacion: 'N° serie no especificado', suma_ars: 4262287, suma_usd: 0 },
-        { item: 'Moto de nieve SKI DOO 2', identificacion: 'N° serie no especificado', suma_ars: 5732041, suma_usd: 0 }
-    ]
-});
-// 11) 40194044
-correcciones.set('40194044', {
-    premio_ars: 18008,
-    suma_asegurada_total: 1500000,
-    cobertura_corta: 'Robo exclusivo (excluye hurto)',
-    vigencia_desde: '10/01/2026',
-    vigencia_hasta: '10/07/2026',
-    items: [
-        { item: 'Equipos fotográficos', identificacion: 'N/A', suma_ars: 1500000, suma_usd: 0 }
-    ]
-});
-// 12) 352086 (ART GHM Satelital)
-correcciones.set('352086', {
-    premio_ars: 439468,
-    suma_asegurada_total: 0,
-    cobertura_corta: 'ART – Ley 24.557 (riesgos del trabajo)',
-    vigencia_desde: '01/09/2023',
-    vigencia_hasta: '31/12/2026',
-    items: [
-        { item: '6 trabajadores', identificacion: 'CIIU 614090', suma_ars: 0, suma_usd: 0, es_prestacional: true }
-    ]
-});
-// 13) 350751 (ART GHM SRL)
-correcciones.set('350751', {
-    premio_ars: 500164,
-    suma_asegurada_total: 0,
-    cobertura_corta: 'ART – Ley 24.557 (riesgos del trabajo)',
-    vigencia_desde: '01/08/2023',
-    vigencia_hasta: '31/12/2026',
-    items: [
-        { item: '14 trabajadores', identificacion: 'CIIU 591110', suma_ars: 0, suma_usd: 0, es_prestacional: true }
-    ]
-});
-// 14) 54001250
-correcciones.set('54001250', {
-    premio_ars: 23135.76,
-    suma_asegurada_total: 2400000,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento e Invalidez (Provincial San Juan)',
-    vigencia_desde: '01/03/2026',
-    vigencia_hasta: '01/03/2027',
-    items: [
-        { item: '8 asegurados', identificacion: 'Provincial San Juan', suma_ars: 2400000, suma_usd: 0 }
-    ]
-});
-// 15) 54001127
-correcciones.set('54001127', {
-    premio_ars: 18760,
-    suma_asegurada_total: 25968503.98,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento e Invalidez (Ley Contrato Trabajo)',
-    vigencia_desde: '01/05/2026',
-    vigencia_hasta: '01/03/2027',
-    items: [
-        { item: '8 asegurados', identificacion: 'Ley 20.744', suma_ars: 25968503.98, suma_usd: 0 }
-    ]
-});
-// 16) 55004187
-correcciones.set('55004187', {
-    premio_ars: 2984.34,
-    suma_asegurada_total: 14499100,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento (Decreto 1567/74)',
-    vigencia_desde: '01/03/2026',
-    vigencia_hasta: '01/03/2027',
-    items: [
-        { item: '7 asegurados', identificacion: 'No Doméstico', suma_ars: 14499100, suma_usd: 0 }
-    ]
-});
-// 17) 54001267
-correcciones.set('54001267', {
-    premio_ars: 3373,
-    suma_asegurada_total: 4200000,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento e Invalidez (Provincial San Juan)',
-    vigencia_desde: '01/03/2026',
-    vigencia_hasta: '01/03/2027',
-    items: [
-        { item: '14 asegurados', identificacion: 'Provincial San Juan', suma_ars: 4200000, suma_usd: 0 }
-    ]
-});
-// 18) 54001112
-correcciones.set('54001112', {
-    premio_ars: 63830,
-    suma_asegurada_total: 87302247.98,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento e Invalidez (Ley Contrato Trabajo)',
-    vigencia_desde: '01/05/2026',
-    vigencia_hasta: '01/03/2027',
-    items: [
-        { item: '13 asegurados', identificacion: 'Ley 20.744', suma_ars: 87302247.98, suma_usd: 0 }
-    ]
-});
-// 19) 55004186
-correcciones.set('55004186', {
-    premio_ars: 2984.34,
-    suma_asegurada_total: 26926900,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento (Decreto 1567/74)',
-    vigencia_desde: '01/03/2026',
-    vigencia_hasta: '01/03/2027',
-    items: [
-        { item: '13 asegurados', identificacion: 'No Doméstico', suma_ars: 26926900, suma_usd: 0 }
-    ]
-});
-// 20) 4089566 (RC Comprensiva)
-correcciones.set('4089566', {
-    premio_ars: 36034.08,
-    suma_asegurada_total: 68000000,
-    cobertura_corta: 'RC Comprensiva – Instalación/mantenimiento sistemas de comunicación',
-    vigencia_desde: '26/03/2026',
-    vigencia_hasta: '26/03/2027',
-    items: [] // sin bienes específicos
-});
-// 21-24) Caución (ya corregidas con datos del Excel adicional)
-correcciones.set('1239222', {
-    premio_ars: 48553.8,
-    suma_asegurada_total: 3165500,
-    cobertura_corta: 'Caución por Adjudicación – Garantía mantenimiento cámaras 4K (Expte. 1100-000717-2025)',
-    vigencia_desde: '15/05/2026',
-    vigencia_hasta: '15/08/2026',
-    items: [{ item: 'Servicio cámaras 4K', identificacion: 'Expte. 1100-000717-2025', suma_ars: 3165500, suma_usd: 0 }]
-});
-correcciones.set('1234850', {
-    premio_usd: 203.04,
-    suma_asegurada_usd: 27500,
-    cobertura_corta: 'Caución por Anticipo – Stand Fiesta del Sol (Pedido 4501322401)',
-    vigencia_desde: '11/05/2026',
-    vigencia_hasta: '11/08/2026',
-    items: [{ item: 'Stand Fiesta del Sol', identificacion: 'Pedido 4501322401', suma_ars: 0, suma_usd: 27500 }]
-});
-correcciones.set('1234845', {
-    premio_usd: 204.36,
-    suma_asegurada_usd: 27694.35,
-    cobertura_corta: 'Caución por Anticipo – Stand Fiesta del Sol (Pedido 4501322193)',
-    vigencia_desde: '11/05/2026',
-    vigencia_hasta: '11/08/2026',
-    items: [{ item: 'Stand Fiesta del Sol', identificacion: 'Pedido 4501322193', suma_ars: 0, suma_usd: 27694.35 }]
-});
-correcciones.set('1233958', {
-    premio_ars: 79019.4,
-    suma_asegurada_total: 711100,
-    cobertura_corta: 'Caución por Mantenimiento de Oferta – Garantía cámaras (Licitación 04/2025)',
-    vigencia_desde: '22/10/2025',
-    vigencia_hasta: '22/01/2026',
-    items: [{ item: 'Mantenimiento cámaras', identificacion: 'Licitación 04/2025', suma_ars: 711100, suma_usd: 0 }]
-});
+// ======================== PÓLIZAS DE EVENTO (Expo San Juan Minero 2026) ========================
+// Datos extraídos de los PDFs de Federación Patronal y La Segunda
+const polizasEvento = [
+    // Accidentes Personales (Federación Patronal) - algunas muestras representativas
+    { nro_poliza: '12-10363561', tomador: 'GHM Satelital SRL', empresa: 'GHM Satelital SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 16522.72, costo_mensual_usd: 0, vigencia_desde: '04/05/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Accidentes Personales (muerte, invalidez, asistencia médica)', items: [] },
+    { nro_poliza: '12-10409355', tomador: 'GHM Satelital SRL', empresa: 'GHM Satelital SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 16522.72, costo_mensual_usd: 0, vigencia_desde: '06/05/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Accidentes Personales', items: [] },
+    { nro_poliza: '12-10412587', tomador: 'GHM Satelital SRL', empresa: 'GHM Satelital SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 9670.01, costo_mensual_usd: 0, vigencia_desde: '07/05/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Accidentes Personales', items: [] },
+    { nro_poliza: '12-10377893', tomador: 'GHM SRL', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 16522.72, costo_mensual_usd: 0, vigencia_desde: '04/05/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Accidentes Personales', items: [] },
+    { nro_poliza: '12-10405193', tomador: 'GHM Contenidos', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 40238.58, costo_mensual_usd: 0, vigencia_desde: '05/05/2026', vigencia_hasta: '09/05/2026', cobertura_corta: 'Accidentes Personales', items: [] },
+    // Seguro Integral (La Segunda)
+    { nro_poliza: '40412649', tomador: 'GHM', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Seguro Integral', aseguradora: 'La Segunda', costo_mensual_ars: 72400, costo_mensual_usd: 0, vigencia_desde: '28/04/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Seguro Integral (RC y daños)', items: [] },
+    { nro_poliza: '40412631', tomador: 'GHM SATELITAL', empresa: 'GHM Satelital SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Seguro Integral', aseguradora: 'La Segunda', costo_mensual_ars: 70029.41, costo_mensual_usd: 0, vigencia_desde: '28/04/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Seguro Integral', items: [] },
+    { nro_poliza: '40412647', tomador: 'henkel', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Seguro Integral', aseguradora: 'La Segunda', costo_mensual_ars: 72400, costo_mensual_usd: 0, vigencia_desde: '28/04/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Seguro Integral', items: [] },
+    { nro_poliza: '40412611', tomador: 'weir vulco', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Seguro Integral', aseguradora: 'La Segunda', costo_mensual_ars: 70000, costo_mensual_usd: 0, vigencia_desde: '28/04/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Seguro Integral', items: [] }
+];
+
+// Combinar todas las pólizas (recurrentes + evento)
+const todasLasPolizas = [...polizasCorregidas, ...polizasEvento];
 
 // ======================== FUNCIONES AUXILIARES ========================
 function abreviaturaNumero(num) {
@@ -298,129 +494,50 @@ function esEvento(p) {
     return p.proyecto_norm === 'expo san juan minero 2026';
 }
 
-async function obtenerTipoCambio() {
-    try {
-        const response = await fetch('https://dolarapi.com/v1/dolares/oficial');
-        if (!response.ok) throw new Error();
-        const data = await response.json();
-        return parseFloat(data.venta);
-    } catch {
-        return 1200;
-    }
-}
-
-function fetchCSV(url) {
-    return new Promise((resolve, reject) => {
-        Papa.parse(url, {
-            download: true,
-            header: true,
-            dynamicTyping: true,
-            skipEmptyLines: true,
-            complete: (results) => resolve(results.data),
-            error: (err) => reject(err)
-        });
-    });
-}
-
-// Aplicar correcciones a una póliza
-function aplicarCorrecciones(poliza, itemsOriginales) {
-    const nro = poliza.nro_poliza;
-    if (!correcciones.has(nro)) return { poliza, items: itemsOriginales };
-    const corr = correcciones.get(nro);
-    // Actualizar datos de la póliza
-    if (corr.premio_ars !== undefined) poliza.costo_mensual_ars = corr.premio_ars;
-    if (corr.premio_usd !== undefined) poliza.costo_mensual_usd = corr.premio_usd;
-    if (corr.cobertura_corta) poliza.cobertura_corta = corr.cobertura_corta;
-    if (corr.vigencia_desde) poliza.vigencia_desde = corr.vigencia_desde;
-    if (corr.vigencia_hasta) poliza.vigencia_hasta = corr.vigencia_hasta;
-    poliza.suma_asegurada_total = corr.suma_asegurada_total || 0;
-    // Items corregidos
-    let nuevosItems = corr.items || [];
-    if (nuevosItems.length === 0 && itemsOriginales.length > 0) nuevosItems = itemsOriginales;
-    return { poliza, items: nuevosItems };
-}
-
-async function loadAllData() {
-    tipoCambioUSD = await obtenerTipoCambio();
-    let polCSV = [], itemsCSV = [];
-    try {
-        polCSV = await fetchCSV(POLIZAS_CSV_URL);
-        itemsCSV = await fetchCSV(ITEMS_CSV_URL);
-    } catch(e) { console.warn(e); }
-    
-    // Mapear pólizas
-    polizasData = (polCSV.length ? polCSV : []).map(p => {
-        let proyectoRaw = limpiarTexto(p['Proyecto / Centro de Costo'] || '');
-        let tomadorRaw = limpiarTexto(p.Tomador || '');
-        let pagadorRaw = limpiarTexto(p['Pagador Real'] || tomadorRaw);
-        let nroPolizaRaw = limpiarTexto(p['Nro Póliza'] || p.ID_Poliza || '');
+// Inicializar datos
+function initData() {
+    // Crear polizasData e itemsData
+    polizasData = todasLasPolizas.map((p, idx) => {
+        // Calcular suma asegurada total a partir de items
+        let sumaTotal = 0;
+        if (p.items && p.items.length) {
+            sumaTotal = p.items.reduce((acc, item) => acc + (item.suma_ars || 0) + (item.suma_usd || 0) * tipoCambioUSD, 0);
+        }
         return {
-            id_poliza: p.ID_Poliza?.toString().trim() || '',
-            nro_poliza: nroPolizaRaw,
-            tomador: tomadorRaw,
-            empresa: tomadorRaw,
-            pagador: pagadorRaw,
-            proyecto_raw: proyectoRaw,
-            proyecto_norm: normalizarParaComparacion(proyectoRaw),
-            ramo: limpiarTexto(p.Ramo || ''),
-            aseguradora: limpiarTexto(p.Aseguradora || ''),
-            costo_mensual_ars: parseFloat(p['Costo Mensual ARS'] || 0),
-            costo_mensual_usd: parseFloat(p['Costo Mensual USD'] || 0),
-            vigencia_desde: p['Vigencia Desde'] || '',
-            vigencia_hasta: p['Vigencia Hasta (fecha)'] || '',
-            cobertura_corta: ''
+            id_poliza: `POL-${idx+1}`,
+            nro_poliza: p.nro_poliza,
+            tomador: p.tomador,
+            empresa: p.empresa,
+            pagador: p.pagador,
+            proyecto_norm: p.proyecto_norm,
+            ramo: p.ramo,
+            aseguradora: p.aseguradora,
+            costo_mensual_ars: p.costo_mensual_ars,
+            costo_mensual_usd: p.costo_mensual_usd,
+            vigencia_desde: p.vigencia_desde,
+            vigencia_hasta: p.vigencia_hasta,
+            cobertura_corta: p.cobertura_corta,
+            suma_asegurada_total: sumaTotal,
+            cantidad_items: p.items ? p.items.length : 0
         };
     });
     
-    // Mapear items
-    let itemsMap = new Map();
-    (itemsCSV.length ? itemsCSV : []).forEach(i => {
-        let idPol = i.ID_Poliza?.toString().trim() || '';
-        if (!itemsMap.has(idPol)) itemsMap.set(idPol, []);
-        itemsMap.get(idPol).push({
-            item: limpiarTexto(i['Ítem asegurado'] || ''),
-            identificacion: limpiarTexto(i['Identificación (Patente/DNI/Serie)'] || ''),
-            suma_asegurada_ars: parseFloat(i['Suma Asegurada ARS'] || 0),
-            suma_asegurada_usd: parseFloat(i['Suma Asegurada USD'] || 0)
-        });
+    // Construir itemsData
+    itemsData = [];
+    todasLasPolizas.forEach((p, idx) => {
+        const idPoliza = `POL-${idx+1}`;
+        if (p.items) {
+            p.items.forEach(item => {
+                itemsData.push({
+                    id_poliza: idPoliza,
+                    item: item.item,
+                    identificacion: item.identificacion,
+                    suma_asegurada_ars: item.suma_ars || 0,
+                    suma_asegurada_usd: item.suma_usd || 0
+                });
+            });
+        }
     });
-    
-    // Unificar empresas
-    polizasData = polizasData.map(p => {
-        let empresa = p.tomador;
-        if (normalizarParaComparacion(empresa) === 'ghm contenidos') empresa = 'GHM SRL';
-        if (normalizarParaComparacion(empresa) === 'ghm satelital') empresa = 'GHM Satelital SRL';
-        if (normalizarParaComparacion(empresa).includes('ghm') && !normalizarParaComparacion(empresa).includes('satelital')) empresa = 'GHM SRL';
-        let pagador = p.pagador;
-        if (esEvento(p)) pagador = 'GHM SRL';
-        return { ...p, empresa, pagador };
-    });
-    
-    // Aplicar correcciones y reconstruir itemsData global
-    let nuevosItems = [];
-    polizasData = polizasData.map(p => {
-        const itemsOrg = itemsMap.get(p.id_poliza) || [];
-        const { poliza, items } = aplicarCorrecciones(p, itemsOrg);
-        nuevosItems.push(...items.map(item => ({ ...item, id_poliza: poliza.id_poliza, nro_poliza: poliza.nro_poliza })));
-        return poliza;
-    });
-    itemsData = nuevosItems;
-    
-    // Calcular suma asegurada total por póliza (suma de items)
-    const sumaPorPoliza = new Map();
-    itemsData.forEach(item => {
-        const key = item.id_poliza;
-        const suma = (item.suma_asegurada_ars || 0) + (item.suma_asegurada_usd || 0) * tipoCambioUSD;
-        sumaPorPoliza.set(key, (sumaPorPoliza.get(key) || 0) + suma);
-    });
-    polizasData = polizasData.map(p => ({
-        ...p,
-        suma_asegurada_total: sumaPorPoliza.get(p.id_poliza) || 0,
-        cantidad_items: itemsData.filter(i => i.id_poliza === p.id_poliza).length
-    }));
-    
-    renderCurrentTab();
-    document.getElementById('lastUpdate').innerHTML = new Date().toLocaleTimeString() + ' - USD $' + tipoCambioUSD;
 }
 
 // Obtener pólizas según pestaña y empresa
@@ -429,11 +546,9 @@ function getPolizasFiltradas() {
     if (currentTab === 'recurrente') {
         base = base.filter(p => p.empresa === currentEmpresa);
     }
-    // Filtro por ramo seleccionado
     if (currentRamoFiltro) {
         base = base.filter(p => p.ramo === currentRamoFiltro);
     }
-    // Búsqueda en detalle de pólizas
     if (currentPolizaSearch) {
         const searchLower = currentPolizaSearch.toLowerCase();
         base = base.filter(p => 
@@ -447,6 +562,7 @@ function getPolizasFiltradas() {
     return base;
 }
 
+// ======================== RENDERIZADO ========================
 function renderCurrentTab() {
     const polizas = getPolizasFiltradas();
     updateKPIs(polizas);
@@ -477,7 +593,6 @@ function updateKPIs(polizas) {
     document.getElementById('kpiAseguradoras').innerHTML = aseguradorasSet.size;
 }
 
-// Gestión de gráficos con toggle individual
 let chartTypes = {
     gastoAseguradora: 'bar',
     gastoRamo: 'bar',
@@ -485,7 +600,6 @@ let chartTypes = {
 };
 
 function updateCharts(polizas) {
-    // Gasto por aseguradora
     const gastoAseguradora = {};
     for (const p of polizas) {
         const costo = (p.costo_mensual_ars || 0) + (p.costo_mensual_usd || 0) * tipoCambioUSD;
@@ -493,7 +607,6 @@ function updateCharts(polizas) {
     }
     renderChart('chartGastoAseguradora', 'gastoAseguradora', gastoAseguradora, 'Gasto mensual ARS');
     
-    // Gasto por ramo
     const gastoRamo = {};
     for (const p of polizas) {
         const costo = (p.costo_mensual_ars || 0) + (p.costo_mensual_usd || 0) * tipoCambioUSD;
@@ -501,7 +614,6 @@ function updateCharts(polizas) {
     }
     renderChart('chartGastoRamo', 'gastoRamo', gastoRamo, 'Gasto mensual ARS');
     
-    // Suma asegurada por aseguradora
     const sumaAseguradora = {};
     for (const p of polizas) {
         sumaAseguradora[p.aseguradora] = (sumaAseguradora[p.aseguradora] || 0) + (p.suma_asegurada_total || 0);
@@ -530,7 +642,6 @@ function renderChart(canvasId, chartKey, dataObj, label) {
     }
 }
 
-// Tarjetas de resumen por ramo
 function renderRamoCards(polizas) {
     const ramosMap = new Map();
     for (const poliza of polizas) {
@@ -618,7 +729,7 @@ function renderPolizasDetail(polizasFiltradas) {
                 </div>
             </div>
             <div class="flex flex-wrap gap-3 text-xs">
-                <div><span class="text-gray-500">Cobertura:</span> <span class="font-medium">${poliza.cobertura_corta || poliza.cobertura || 'No especificada'}</span></div>
+                <div><span class="text-gray-500">Cobertura:</span> <span class="font-medium">${poliza.cobertura_corta || 'No especificada'}</span></div>
                 <div><span class="text-gray-500"><i class="fas fa-dollar-sign text-xs"></i> ARS:</span> ${poliza.costo_mensual_ars ? poliza.costo_mensual_ars.toLocaleString() : '0'}</div>
                 ${poliza.costo_mensual_usd ? `<div><span class="text-gray-500"><i class="fas fa-dollar-sign text-xs"></i> USD:</span> ${poliza.costo_mensual_usd.toLocaleString()}</div>` : ''}
                 <div><span class="text-gray-500"># Bienes:</span> ${poliza.cantidad_items}</div>
@@ -709,69 +820,77 @@ async function exportToPDF() {
     } catch(e) { console.warn(e); alert('Error generando PDF'); }
 }
 
-// Eventos
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => {
-            b.classList.remove('active', 'border-b-2', 'border-[#38bdf8]', 'text-[#1e293b]');
-            b.classList.add('bg-gray-50', 'text-gray-600');
+// ======================== EVENTOS E INICIALIZACIÓN ========================
+document.addEventListener('DOMContentLoaded', () => {
+    initData();
+    renderCurrentTab();
+    document.getElementById('lastUpdate').innerHTML = new Date().toLocaleTimeString() + ' - USD $' + tipoCambioUSD;
+    
+    // Eventos de las pestañas
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active', 'border-b-2', 'border-[#38bdf8]', 'text-[#1e293b]');
+                b.classList.add('bg-gray-50', 'text-gray-600');
+            });
+            btn.classList.add('active', 'border-b-2', 'border-[#38bdf8]', 'text-[#1e293b]', 'bg-white');
+            btn.classList.remove('bg-gray-50', 'text-gray-600');
+            currentTab = btn.getAttribute('data-tab');
+            currentRamoFiltro = null;
+            currentPolizaSearch = '';
+            document.getElementById('searchPoliza').value = '';
+            document.getElementById('empresaSelectorContainer').style.display = currentTab === 'recurrente' ? 'block' : 'none';
+            renderCurrentTab();
         });
-        btn.classList.add('active', 'border-b-2', 'border-[#38bdf8]', 'text-[#1e293b]', 'bg-white');
-        btn.classList.remove('bg-gray-50', 'text-gray-600');
-        currentTab = btn.getAttribute('data-tab');
-        currentRamoFiltro = null;
-        currentPolizaSearch = '';
-        document.getElementById('searchPoliza').value = '';
-        document.getElementById('empresaSelectorContainer').style.display = currentTab === 'recurrente' ? 'block' : 'none';
-        renderCurrentTab();
     });
-});
-
-document.querySelectorAll('.empresa-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.empresa-btn').forEach(b => b.classList.remove('active', 'bg-[#bbf7d0]', 'bg-[#fef9c3]'));
-        btn.classList.add('active');
-        if (btn.getAttribute('data-empresa') === 'GHM SRL') {
-            btn.classList.add('bg-[#bbf7d0]');
-            currentEmpresa = 'GHM SRL';
-        } else {
-            btn.classList.add('bg-[#fef9c3]');
-            currentEmpresa = 'GHM Satelital SRL';
-        }
-        currentRamoFiltro = null;
-        currentPolizaSearch = '';
-        document.getElementById('searchPoliza').value = '';
-        renderCurrentTab();
+    
+    document.querySelectorAll('.empresa-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.empresa-btn').forEach(b => b.classList.remove('active', 'bg-[#bbf7d0]', 'bg-[#fef9c3]'));
+            btn.classList.add('active');
+            if (btn.getAttribute('data-empresa') === 'GHM SRL') {
+                btn.classList.add('bg-[#bbf7d0]');
+                currentEmpresa = 'GHM SRL';
+            } else {
+                btn.classList.add('bg-[#fef9c3]');
+                currentEmpresa = 'GHM Satelital SRL';
+            }
+            currentRamoFiltro = null;
+            currentPolizaSearch = '';
+            document.getElementById('searchPoliza').value = '';
+            renderCurrentTab();
+        });
     });
-});
-
-document.getElementById('searchRamo')?.addEventListener('input', () => {
-    const polizas = getPolizasFiltradas();
-    renderRamoCards(polizas);
-});
-document.getElementById('searchPoliza')?.addEventListener('input', (e) => {
-    currentPolizaSearch = e.target.value;
-    renderCurrentTab();
-});
-document.getElementById('limpiarFiltroBtn')?.addEventListener('click', () => {
-    currentRamoFiltro = null;
-    currentPolizaSearch = '';
-    document.getElementById('searchPoliza').value = '';
-    renderCurrentTab();
-});
-document.getElementById('refreshBtn')?.addEventListener('click', loadAllData);
-document.getElementById('exportCSVBtn')?.addEventListener('click', exportToCSV);
-document.getElementById('exportPDFBtn')?.addEventListener('click', exportToPDF);
-
-document.querySelectorAll('.toggleChartBtn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const chartKey = btn.getAttribute('data-chart');
-        if (chartTypes[chartKey] === 'bar') chartTypes[chartKey] = 'pie';
-        else chartTypes[chartKey] = 'bar';
+    
+    document.getElementById('searchRamo')?.addEventListener('input', () => {
         const polizas = getPolizasFiltradas();
-        updateCharts(polizas);
+        renderRamoCards(polizas);
+    });
+    document.getElementById('searchPoliza')?.addEventListener('input', (e) => {
+        currentPolizaSearch = e.target.value;
+        renderCurrentTab();
+    });
+    document.getElementById('limpiarFiltroBtn')?.addEventListener('click', () => {
+        currentRamoFiltro = null;
+        currentPolizaSearch = '';
+        document.getElementById('searchPoliza').value = '';
+        renderCurrentTab();
+    });
+    document.getElementById('refreshBtn')?.addEventListener('click', () => {
+        initData();
+        renderCurrentTab();
+        document.getElementById('lastUpdate').innerHTML = new Date().toLocaleTimeString() + ' - USD $' + tipoCambioUSD;
+    });
+    document.getElementById('exportCSVBtn')?.addEventListener('click', exportToCSV);
+    document.getElementById('exportPDFBtn')?.addEventListener('click', exportToPDF);
+    
+    document.querySelectorAll('.toggleChartBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const chartKey = btn.getAttribute('data-chart');
+            if (chartTypes[chartKey] === 'bar') chartTypes[chartKey] = 'pie';
+            else chartTypes[chartKey] = 'bar';
+            const polizas = getPolizasFiltradas();
+            updateCharts(polizas);
+        });
     });
 });
-
-setInterval(loadAllData, 300000);
-loadAllData();
