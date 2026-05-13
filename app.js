@@ -1,5 +1,5 @@
 // app.js - MCV Seguros Dashboard - Versión definitiva con datos embebidos (sin dependencia de CSVs)
-const tipoCambioUSD = 1200; // valor fijo, se puede actualizar con API si se desea
+const tipoCambioUSD = 1200;
 
 let polizasData = [];
 let itemsData = [];
@@ -10,9 +10,7 @@ let currentRamoFiltro = null;
 let currentPolizaSearch = '';
 
 // ======================== DATOS CORREGIDOS (fuente principal) ========================
-// Estructura: cada entrada tiene los datos de la póliza y sus items
 const polizasCorregidas = [
-    // 1) 68280884
     {
         nro_poliza: '68280884',
         tomador: 'GHM Satelital SRL',
@@ -31,7 +29,6 @@ const polizasCorregidas = [
             { item: 'TOYOTA HILUX L/25 2.8 DC 4X4 TDI SRV+ AT6 2026 - AI002UJ', identificacion: 'AI002UJ', suma_ars: 79838000, suma_usd: 0 }
         ]
     },
-    // 2) 58881286
     {
         nro_poliza: '58881286',
         tomador: 'GHM Satelital SRL',
@@ -49,7 +46,6 @@ const polizasCorregidas = [
             { item: 'TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR', identificacion: 'AF353UN', suma_ars: 45000000, suma_usd: 0 }
         ]
     },
-    // 3) 58845801
     {
         nro_poliza: '58845801',
         tomador: 'GHM Satelital SRL',
@@ -68,7 +64,6 @@ const polizasCorregidas = [
             { item: 'Nissan Frontier', identificacion: 'AP981GW', suma_ars: 45000000, suma_usd: 0 }
         ]
     },
-    // 4) 58881287
     {
         nro_poliza: '58881287',
         tomador: 'GHM SRL',
@@ -89,7 +84,6 @@ const polizasCorregidas = [
             { item: 'Trailer', identificacion: '101AB210EX', suma_ars: 0, suma_usd: 0, solo_rc: true }
         ]
     },
-    // 5) 58844225
     {
         nro_poliza: '58844225',
         tomador: 'GHM Satelital SRL',
@@ -107,7 +101,6 @@ const polizasCorregidas = [
             { item: 'Trailer', identificacion: '101AF353UN', suma_ars: 0, suma_usd: 0, solo_rc: true }
         ]
     },
-    // 6) 58844224
     {
         nro_poliza: '58844224',
         tomador: 'GHM SRL',
@@ -125,7 +118,6 @@ const polizasCorregidas = [
             { item: 'Trailer', identificacion: '101AD571CC', suma_ars: 0, suma_usd: 0, solo_rc: true }
         ]
     },
-    // 7) 67844592
     {
         nro_poliza: '67844592',
         tomador: 'GHM Satelital SRL',
@@ -143,7 +135,6 @@ const polizasCorregidas = [
             { item: 'Trailer', identificacion: '101AF981GW', suma_ars: 0, suma_usd: 0, solo_rc: true }
         ]
     },
-    // 8) 41789769
     {
         nro_poliza: '41789769',
         tomador: 'GHM Satelital SRL',
@@ -161,7 +152,6 @@ const polizasCorregidas = [
             { item: 'Cuatriciclo', identificacion: '419HXK', suma_ars: 13807159, suma_usd: 0 }
         ]
     },
-    // 9) 45598579
     {
         nro_poliza: '45598579',
         tomador: 'GHM Satelital SRL',
@@ -179,7 +169,6 @@ const polizasCorregidas = [
             { item: 'Beta Zontes 368 G', identificacion: 'A269GYK', suma_ars: 11246000, suma_usd: 0 }
         ]
     },
-    // 10) 40156645
     {
         nro_poliza: '40156645',
         tomador: 'GHM Satelital SRL',
@@ -198,7 +187,6 @@ const polizasCorregidas = [
             { item: 'Moto de nieve SKI DOO 2', identificacion: 'N° serie no especificado', suma_ars: 5732041, suma_usd: 0 }
         ]
     },
-    // 11) 40194044
     {
         nro_poliza: '40194044',
         tomador: 'GHM SRL',
@@ -216,7 +204,6 @@ const polizasCorregidas = [
             { item: 'Equipos fotográficos', identificacion: 'N/A', suma_ars: 1500000, suma_usd: 0 }
         ]
     },
-    // 12) 352086 (ART GHM Satelital)
     {
         nro_poliza: '352086',
         tomador: 'GHM Satelital SRL',
@@ -234,7 +221,6 @@ const polizasCorregidas = [
             { item: '6 trabajadores', identificacion: 'CIIU 614090', suma_ars: 0, suma_usd: 0, es_prestacional: true }
         ]
     },
-    // 13) 350751 (ART GHM SRL)
     {
         nro_poliza: '350751',
         tomador: 'GHM SRL',
@@ -252,7 +238,6 @@ const polizasCorregidas = [
             { item: '14 trabajadores', identificacion: 'CIIU 591110', suma_ars: 0, suma_usd: 0, es_prestacional: true }
         ]
     },
-    // 14) 54001250
     {
         nro_poliza: '54001250',
         tomador: 'GHM Satelital SRL',
@@ -270,7 +255,6 @@ const polizasCorregidas = [
             { item: '8 asegurados', identificacion: 'Provincial San Juan', suma_ars: 2400000, suma_usd: 0 }
         ]
     },
-    // 15) 54001127
     {
         nro_poliza: '54001127',
         tomador: 'GHM Satelital SRL',
@@ -288,7 +272,6 @@ const polizasCorregidas = [
             { item: '8 asegurados', identificacion: 'Ley 20.744', suma_ars: 25968503.98, suma_usd: 0 }
         ]
     },
-    // 16) 55004187
     {
         nro_poliza: '55004187',
         tomador: 'GHM Satelital SRL',
@@ -306,7 +289,6 @@ const polizasCorregidas = [
             { item: '7 asegurados', identificacion: 'No Doméstico', suma_ars: 14499100, suma_usd: 0 }
         ]
     },
-    // 17) 54001267
     {
         nro_poliza: '54001267',
         tomador: 'GHM SRL',
@@ -324,7 +306,6 @@ const polizasCorregidas = [
             { item: '14 asegurados', identificacion: 'Provincial San Juan', suma_ars: 4200000, suma_usd: 0 }
         ]
     },
-    // 18) 54001112
     {
         nro_poliza: '54001112',
         tomador: 'GHM SRL',
@@ -342,7 +323,6 @@ const polizasCorregidas = [
             { item: '13 asegurados', identificacion: 'Ley 20.744', suma_ars: 87302247.98, suma_usd: 0 }
         ]
     },
-    // 19) 55004186
     {
         nro_poliza: '55004186',
         tomador: 'GHM SRL',
@@ -360,7 +340,6 @@ const polizasCorregidas = [
             { item: '13 asegurados', identificacion: 'No Doméstico', suma_ars: 26926900, suma_usd: 0 }
         ]
     },
-    // 20) 4089566 (RC Comprensiva)
     {
         nro_poliza: '4089566',
         tomador: 'GHM Satelital SRL',
@@ -376,7 +355,6 @@ const polizasCorregidas = [
         cobertura_corta: 'RC Comprensiva – Instalación/mantenimiento sistemas de comunicación',
         items: []
     },
-    // 21) Caución 1239222
     {
         nro_poliza: '1239222',
         tomador: 'GHM Satelital SRL',
@@ -394,7 +372,6 @@ const polizasCorregidas = [
             { item: 'Servicio cámaras 4K', identificacion: 'Expte. 1100-000717-2025', suma_ars: 3165500, suma_usd: 0 }
         ]
     },
-    // 22) Caución 1234850
     {
         nro_poliza: '1234850',
         tomador: 'GHM SRL',
@@ -412,7 +389,6 @@ const polizasCorregidas = [
             { item: 'Stand Fiesta del Sol', identificacion: 'Pedido 4501322401', suma_ars: 0, suma_usd: 27500 }
         ]
     },
-    // 23) Caución 1234845
     {
         nro_poliza: '1234845',
         tomador: 'GHM SRL',
@@ -430,7 +406,6 @@ const polizasCorregidas = [
             { item: 'Stand Fiesta del Sol', identificacion: 'Pedido 4501322193', suma_ars: 0, suma_usd: 27694.35 }
         ]
     },
-    // 24) Caución 1233958
     {
         nro_poliza: '1233958',
         tomador: 'GHM Satelital SRL',
@@ -450,26 +425,20 @@ const polizasCorregidas = [
     }
 ];
 
-// ======================== PÓLIZAS DE EVENTO (Expo San Juan Minero 2026) ========================
-// Datos extraídos de los PDFs de Federación Patronal y La Segunda
 const polizasEvento = [
-    // Accidentes Personales (Federación Patronal) - algunas muestras representativas
-    { nro_poliza: '12-10363561', tomador: 'GHM Satelital SRL', empresa: 'GHM Satelital SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 16522.72, costo_mensual_usd: 0, vigencia_desde: '04/05/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Accidentes Personales (muerte, invalidez, asistencia médica)', items: [] },
+    { nro_poliza: '12-10363561', tomador: 'GHM Satelital SRL', empresa: 'GHM Satelital SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 16522.72, costo_mensual_usd: 0, vigencia_desde: '04/05/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Accidentes Personales', items: [] },
     { nro_poliza: '12-10409355', tomador: 'GHM Satelital SRL', empresa: 'GHM Satelital SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 16522.72, costo_mensual_usd: 0, vigencia_desde: '06/05/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Accidentes Personales', items: [] },
     { nro_poliza: '12-10412587', tomador: 'GHM Satelital SRL', empresa: 'GHM Satelital SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 9670.01, costo_mensual_usd: 0, vigencia_desde: '07/05/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Accidentes Personales', items: [] },
     { nro_poliza: '12-10377893', tomador: 'GHM SRL', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 16522.72, costo_mensual_usd: 0, vigencia_desde: '04/05/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Accidentes Personales', items: [] },
     { nro_poliza: '12-10405193', tomador: 'GHM Contenidos', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Accidentes Personales', aseguradora: 'Federación Patronal', costo_mensual_ars: 40238.58, costo_mensual_usd: 0, vigencia_desde: '05/05/2026', vigencia_hasta: '09/05/2026', cobertura_corta: 'Accidentes Personales', items: [] },
-    // Seguro Integral (La Segunda)
-    { nro_poliza: '40412649', tomador: 'GHM', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Seguro Integral', aseguradora: 'La Segunda', costo_mensual_ars: 72400, costo_mensual_usd: 0, vigencia_desde: '28/04/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Seguro Integral (RC y daños)', items: [] },
+    { nro_poliza: '40412649', tomador: 'GHM', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Seguro Integral', aseguradora: 'La Segunda', costo_mensual_ars: 72400, costo_mensual_usd: 0, vigencia_desde: '28/04/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Seguro Integral', items: [] },
     { nro_poliza: '40412631', tomador: 'GHM SATELITAL', empresa: 'GHM Satelital SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Seguro Integral', aseguradora: 'La Segunda', costo_mensual_ars: 70029.41, costo_mensual_usd: 0, vigencia_desde: '28/04/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Seguro Integral', items: [] },
     { nro_poliza: '40412647', tomador: 'henkel', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Seguro Integral', aseguradora: 'La Segunda', costo_mensual_ars: 72400, costo_mensual_usd: 0, vigencia_desde: '28/04/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Seguro Integral', items: [] },
     { nro_poliza: '40412611', tomador: 'weir vulco', empresa: 'GHM SRL', pagador: 'GHM', proyecto_norm: 'expo san juan minero 2026', ramo: 'Seguro Integral', aseguradora: 'La Segunda', costo_mensual_ars: 70000, costo_mensual_usd: 0, vigencia_desde: '28/04/2026', vigencia_hasta: '10/05/2026', cobertura_corta: 'Seguro Integral', items: [] }
 ];
 
-// Combinar todas las pólizas (recurrentes + evento)
 const todasLasPolizas = [...polizasCorregidas, ...polizasEvento];
 
-// ======================== FUNCIONES AUXILIARES ========================
 function abreviaturaNumero(num) {
     if (num === undefined || num === null || isNaN(num)) return '$0';
     if (num >= 1e9) return '$' + (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
@@ -494,11 +463,8 @@ function esEvento(p) {
     return p.proyecto_norm === 'expo san juan minero 2026';
 }
 
-// Inicializar datos
 function initData() {
-    // Crear polizasData e itemsData
     polizasData = todasLasPolizas.map((p, idx) => {
-        // Calcular suma asegurada total a partir de items
         let sumaTotal = 0;
         if (p.items && p.items.length) {
             sumaTotal = p.items.reduce((acc, item) => acc + (item.suma_ars || 0) + (item.suma_usd || 0) * tipoCambioUSD, 0);
@@ -522,7 +488,6 @@ function initData() {
         };
     });
     
-    // Construir itemsData
     itemsData = [];
     todasLasPolizas.forEach((p, idx) => {
         const idPoliza = `POL-${idx+1}`;
@@ -540,7 +505,6 @@ function initData() {
     });
 }
 
-// Obtener pólizas según pestaña y empresa
 function getPolizasFiltradas() {
     let base = currentTab === 'recurrente' ? polizasData.filter(esRecurrente) : polizasData.filter(esEvento);
     if (currentTab === 'recurrente') {
@@ -562,7 +526,6 @@ function getPolizasFiltradas() {
     return base;
 }
 
-// ======================== RENDERIZADO ========================
 function renderCurrentTab() {
     const polizas = getPolizasFiltradas();
     updateKPIs(polizas);
@@ -820,13 +783,11 @@ async function exportToPDF() {
     } catch(e) { console.warn(e); alert('Error generando PDF'); }
 }
 
-// ======================== EVENTOS E INICIALIZACIÓN ========================
 document.addEventListener('DOMContentLoaded', () => {
     initData();
     renderCurrentTab();
     document.getElementById('lastUpdate').innerHTML = new Date().toLocaleTimeString() + ' - USD $' + tipoCambioUSD;
     
-    // Eventos de las pestañas
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => {
