@@ -1,0 +1,115 @@
+/* style.css - MCV Seguros Dashboard - Profesional */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+button, select, input {
+    transition: all 0.15s ease;
+}
+button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid #00a8e8;
+    outline-offset: 2px;
+}
+canvas {
+    max-height: 100%;
+}
+tr:hover td {
+    background-color: rgba(0,59,92,0.03);
+}
+td, th {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+}
+.viewSelectorBtn.active {
+    background-color: #003b5c !important;
+    border-color: #003b5c !important;
+    color: white !important;
+}
+/* Modales */
+#modalItems, #modalEvento {
+    transition: all 0.2s ease;
+}
+/* Estilos para ordenamiento */
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+.sortable:hover {
+    background-color: #f0f0f0;
+}
+.sortable.sort-asc::after {
+    content: " ↑";
+    font-size: 0.7rem;
+}
+.sortable.sort-desc::after {
+    content: " ↓";
+    font-size: 0.7rem;
+}
+/* Tooltips nativos con delay suave */
+.tooltip-num {
+    cursor: help;
+    border-bottom: 1px dotted #ccc;
+}
+/* Badges de filtros */
+#activeFiltersContainer span {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+}
+.remove-filter {
+    margin-left: 0.25rem;
+    font-weight: bold;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: inherit;
+}
+.remove-filter:hover {
+    opacity: 0.7;
+}
+@media print {
+    body {
+        background: white;
+        color: black;
+        font-size: 10pt;
+    }
+    .print-break-before {
+        page-break-before: always;
+    }
+    .bg-white, .bg-gray-50, .bg-gray-100 {
+        background: white !important;
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+    }
+    button, .viewSelectorBtn, #exportCSVBtn, #refreshBtn {
+        display: none !important;
+    }
+    canvas {
+        max-width: 100%;
+        page-break-inside: avoid;
+    }
+    .text-gray-500, .text-gray-400, .text-gray-600 {
+        color: #333 !important;
+    }
+    h1, h2, h3 {
+        color: black !important;
+    }
+    table {
+        page-break-inside: avoid;
+    }
+    .border-gray-200, .border-gray-300 {
+        border-color: #ccc !important;
+    }
+}
