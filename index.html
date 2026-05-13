@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>MCV Seguros | Dashboard Ejecutivo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#f4f7f6] text-gray-800 font-['Inter'] antialiased">
+
+    <!-- Header -->
+    <div class="border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center flex-wrap gap-3">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-semibold tracking-tight text-[#003b5c]">MCV Seguros</h1>
+                <p class="text-gray-500 text-xs mt-0.5">Dashboard Ejecutivo · Gestión de seguros recurrentes y eventos puntuales</p>
+            </div>
+            <div class="flex gap-2 sm:gap-3 items-center">
+                <button id="refreshBtn" class="bg-[#003b5c] hover:bg-[#002a44] text-white transition px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-sync-alt text-xs"></i> Actualizar
+                </button>
+                <div class="bg-gray-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs text-gray-600 border border-gray-200">
+                    <i class="far fa-calendar-alt mr-1"></i>
+                    <span id="lastUpdate">--:--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <!-- Pestañas -->
+        <div class="flex gap-3 mb-6 border-b border-gray-200 pb-2">
+            <button data-tab="recurrente" class="tab-btn active px-4 py-2 text-sm font-medium rounded-t-lg bg-white text-[#003b5c] border-b-2 border-[#003b5c]">Seguros recurrentes</button>
+            <button data-tab="evento" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg bg-gray-50 text-gray-600 hover:text-[#003b5c]">Eventos puntuales</button>
+        </div>
+
+        <!-- KPIs -->
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-8">
+            <div class="bg-white rounded-2xl p-3 sm:p-5 border border-gray-200 shadow-sm">
+                <div class="text-gray-500 text-xs uppercase tracking-wider">Gasto mensual</div>
+                <div class="text-xl sm:text-3xl font-bold mt-1 text-[#003b5c]" id="kpiGastoMensual">$0</div>
+            </div>
+            <div class="bg-white rounded-2xl p-3 sm:p-5 border border-gray-200 shadow-sm">
+                <div class="text-gray-500 text-xs uppercase tracking-wider">Suma asegurada</div>
+                <div class="text-xl sm:text-3xl font-bold mt-1 text-[#003b5c]" id="kpiSumaAsegurada">$0</div>
+            </div>
+            <div class="bg-white rounded-2xl p-3 sm:p-5 border border-gray-200 shadow-sm">
+                <div class="text-gray-500 text-xs uppercase tracking-wider">Pólizas activas</div>
+                <div class="text-xl sm:text-3xl font-bold mt-1 text-[#003b5c]" id="kpiPolizasActivas">0</div>
+            </div>
+            <div class="bg-white rounded-2xl p-3 sm:p-5 border border-gray-200 shadow-sm">
+                <div class="text-gray-500 text-xs uppercase tracking-wider">Aseguradoras</div>
+                <div class="text-xl sm:text-3xl font-bold mt-1 text-[#003b5c]" id="kpiAseguradoras">0</div>
+            </div>
+        </div>
+
+        <!-- Dos columnas: gráficos (izquierda) y tarjetas de ramo (derecha) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- Columna izquierda: gráficos -->
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-sm">
+                    <h3 class="font-medium text-gray-700 mb-3 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-[#00a8e8]"></i> Gasto mensual por aseguradora</h3>
+                    <canvas id="chartGastoAseguradora" height="220"></canvas>
+                </div>
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-sm">
+                    <h3 class="font-medium text-gray-700 mb-3 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-[#00a8e8]"></i> Gasto mensual por ramo</h3>
+                    <canvas id="chartGastoRamo" height="220"></canvas>
+                </div>
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-sm">
+                    <h3 class="font-medium text-gray-700 mb-3 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-[#00a8e8]"></i> Suma asegurada por aseguradora</h3>
+                    <canvas id="chartPatrimonioAseguradora" height="220"></canvas>
+                </div>
+            </div>
+            <!-- Columna derecha: tarjetas de resumen por ramo -->
+            <div class="space-y-4">
+                <h3 class="font-semibold text-gray-700 text-sm">Resumen por ramo</h3>
+                <div id="ramoCardsContainer" class="space-y-3">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalle de pólizas del ramo seleccionado -->
+        <div id="polizasDetailContainer" class="hidden mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-1 h-8 bg-[#00a8e8] rounded-full"></div>
+                    <h2 class="text-xl font-semibold text-gray-800" id="ramoSeleccionadoTitulo"></h2>
+                    <button id="limpiarFiltroBtn" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded-full">✖ Limpiar filtro</button>
+                </div>
+                <button id="exportCSVBtn" class="bg-[#003b5c] hover:bg-[#002a44] text-white px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"><i class="fas fa-download"></i> Exportar CSV (detalle de bienes)</button>
+            </div>
+            <div id="polizasListContainer" class="space-y-4">
+                <!-- Se llena con tarjetas de pólizas expandibles -->
+            </div>
+        </div>
+
+        <div class="mt-8 text-center text-xs text-gray-400 border-t border-gray-200 pt-6">
+            <p>Actualizado automáticamente desde Google Sheets · MCV Seguros</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
