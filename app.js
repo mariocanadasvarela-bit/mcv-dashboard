@@ -53,7 +53,7 @@ correcciones.set('58845801', {
 // 4) 58881287
 correcciones.set('58881287', {
     premio_ars: 698123,
-    suma_asegurada_total: 38500000+37300000+45000000 = 120800000, // suma de los tres autos (trailer 0)
+    suma_asegurada_total: 38500000 + 37300000 + 45000000, // Corregido
     cobertura_corta: 'Privilegio L2 para autos / Arranque L2 para trailer',
     vigencia_desde: '05/04/2026',
     vigencia_hasta: '05/07/2026',
