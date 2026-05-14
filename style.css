@@ -36,3 +36,12 @@
 .text-sky-700 { color: #0369a1; }
 .bg-slate-100 { background-color: #f1f5f9; }
 .text-slate-700 { color: #334155; }
+/* Ajustes adicionales */
+#ramosContainer .bg-white, #polizasContainer .bg-white {
+    transition: all 0.2s ease;
+}
+#backToRamosBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
