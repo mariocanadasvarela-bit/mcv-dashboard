@@ -471,6 +471,7 @@
             }
         }
 
+        // NUEVA VERSIÓN DE LA TARJETA DE PÓLIZA CON SUMA ASEGURADA Y COSTO JUNTOS
         function renderPolizasDeRamo(polizas) {
             const container = document.getElementById('polizasContainer');
             container.innerHTML = '';
@@ -490,25 +491,34 @@
                 card.className = 'bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden';
                 card.innerHTML = `
                     <div class="p-5">
-                        <div class="flex justify-between items-start flex-wrap gap-3">
-                            <div>
+                        <div class="flex justify-between items-start flex-wrap gap-4">
+                            <div class="flex-1">
                                 <div class="text-indigo-600 text-sm font-semibold uppercase">${p.ramo}</div>
                                 <div class="text-xl font-bold text-slate-800 mt-1">${p.cobertura_corta || 'Cobertura específica'}</div>
                                 <div class="text-sm text-slate-600 mt-1">${p.tomador}</div>
                             </div>
-                            <div class="bg-indigo-50 rounded-xl px-4 py-2 text-right">
-                                <div class="text-xs text-slate-500">Inversión en riesgo</div>
-                                <div class="text-lg font-bold text-slate-800">${costoStr}</div>
+                            
+                            <div class="bg-indigo-50/70 rounded-xl px-5 py-3 text-right flex flex-col gap-2 min-w-[220px] border border-indigo-100/50 shadow-sm">
+                                <div>
+                                    <div class="text-xs text-slate-500 uppercase tracking-wider font-bold">Suma Asegurada</div>
+                                    <div class="text-xl font-black text-slate-800">${abreviaturaNumero(p.suma_asegurada_total)}</div>
+                                </div>
+                                <div class="w-full border-t border-indigo-200/60 border-dashed"></div>
+                                <div>
+                                    <div class="text-xs text-slate-500 uppercase tracking-wider font-bold">Costo del seguro</div>
+                                    <div class="text-lg font-bold text-indigo-700">${costoStr}</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="mt-4 flex flex-wrap justify-between items-center gap-3">
-                            <div class="flex flex-wrap gap-4 text-sm">
-                                <div><span class="text-slate-400"># Bienes:</span> <span class="font-medium">${p.cantidad_items}</span></div>
-                                <div><span class="text-slate-400">Suma asegurada:</span> <span class="font-medium">${abreviaturaNumero(p.suma_asegurada_total)}</span></div>
-                                <div><span class="text-slate-400">Vigencia:</span> <span class="font-medium">${p.vigencia_desde} al ${p.vigencia_hasta}</span></div>
-                                <div><span class="${vigencia.color} text-xs px-2 py-0.5 rounded-full">${vigencia.texto}</span></div>
+                        
+                        <div class="mt-5 flex flex-wrap justify-between items-center gap-3">
+                            <div class="flex flex-wrap items-center gap-4 text-sm">
+                                <div><span class="text-slate-400"># Bienes:</span> <span class="font-medium text-slate-700">${p.cantidad_items}</span></div>
+                                <div class="w-px h-4 bg-slate-200 hidden sm:block"></div>
+                                <div><span class="text-slate-400">Vigencia:</span> <span class="font-medium text-slate-700">${p.vigencia_desde} al ${p.vigencia_hasta}</span></div>
+                                <div><span class="${vigencia.color} text-xs px-2 py-0.5 rounded-full font-medium tracking-wide">${vigencia.texto}</span></div>
                             </div>
-                            <button class="ver-bienes-btn bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 active:scale-95" data-id="${p.id_poliza}">
+                            <button class="ver-bienes-btn bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all active:scale-95 shadow-sm" data-id="${p.id_poliza}">
                                 <i class="fas fa-box-open"></i> Ver bienes (${p.cantidad_items})
                             </button>
                         </div>
@@ -516,7 +526,8 @@
                 `;
                 container.appendChild(card);
             }
-            
+
+            // Eventos ver bienes
             document.querySelectorAll('.ver-bienes-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = btn.dataset.id;
