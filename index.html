@@ -11,15 +11,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <style>
-        /* Estilos básicos para asegurar que los canvas tengan tamaño */
-        canvas { max-height: 250px; width: 100%; }
-        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-50 text-gray-700 font-['Inter'] antialiased">
+<body class="bg-[#f4f6f9] text-gray-700 font-['Inter'] antialiased">
 
-    <!-- Header igual que antes... -->
+    <!-- Header igual -->
     <div class="border-b border-gray-200 bg-white sticky top-0 z-20 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center flex-wrap gap-3">
             <div>
@@ -45,19 +41,22 @@
             <button data-tab="evento" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg bg-gray-50 text-gray-600 hover:text-gray-800">Eventos puntuales</button>
         </div>
 
-        <!-- Selector de empresa y filtros rápidos -->
-        <div id="empresaSelectorContainer" class="mb-6">
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="inline-flex rounded-md shadow-sm" role="group">
-                    <button type="button" data-empresa="GHM SRL" class="empresa-btn bg-gray-100 text-gray-700 px-4 py-2 text-sm font-medium rounded-l-lg border border-gray-300 hover:bg-gray-200">GHM SRL</button>
-                    <button type="button" data-empresa="GHM Satelital SRL" class="empresa-btn bg-gray-100 text-gray-700 px-4 py-2 text-sm font-medium border-t border-b border-gray-300 hover:bg-gray-200">GHM Satelital SRL</button>
-                    <button type="button" data-empresa="Ambas" class="empresa-btn bg-blue-100 text-blue-800 px-4 py-2 text-sm font-medium rounded-r-lg border border-blue-300">Ambas empresas</button>
-                </div>
-                <div id="filtrosRapidos" class="flex flex-wrap gap-2"></div>
+        <!-- Selector de empresa y búsqueda (fila superior) -->
+        <div id="empresaSelectorContainer" class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button type="button" data-empresa="GHM SRL" class="empresa-btn bg-gray-100 text-gray-700 px-4 py-2 text-sm font-medium rounded-l-lg border border-gray-300 hover:bg-gray-200">GHM SRL</button>
+                <button type="button" data-empresa="GHM Satelital SRL" class="empresa-btn bg-gray-100 text-gray-700 px-4 py-2 text-sm font-medium border-t border-b border-gray-300 hover:bg-gray-200">GHM Satelital SRL</button>
+                <button type="button" data-empresa="Ambas" class="empresa-btn bg-blue-100 text-blue-800 px-4 py-2 text-sm font-medium rounded-r-lg border border-blue-300">Ambas empresas</button>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="searchPoliza" placeholder="Buscar por N° póliza, patente, tomador..." class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-64">
+                <button id="exportCSVBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"><i class="fas fa-download"></i> CSV</button>
+                <button id="exportExcelBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"><i class="fas fa-file-excel"></i> Excel</button>
+                <button id="exportPDFBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"><i class="fas fa-file-pdf"></i> PDF</button>
             </div>
         </div>
 
-        <!-- KPIs (solo 4) -->
+        <!-- KPIs (4) -->
         <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                 <div class="text-gray-500 text-xs uppercase tracking-wider">Gasto mensual</div>
@@ -82,36 +81,57 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                 <h3 class="font-medium text-gray-700 mb-4 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-blue-400"></i> Gasto mensual por aseguradora</h3>
-                <canvas id="chartGastoAseguradora" height="200" style="max-height: 200px;"></canvas>
+                <canvas id="chartGastoAseguradora" height="200"></canvas>
             </div>
             <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                 <h3 class="font-medium text-gray-700 mb-4 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-blue-400"></i> Gasto mensual por ramo</h3>
-                <canvas id="chartGastoRamo" height="200" style="max-height: 200px;"></canvas>
+                <canvas id="chartGastoRamo" height="200"></canvas>
             </div>
         </div>
 
-        <!-- Listado de pólizas como tarjetas -->
-        <div class="mt-8">
-            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <div class="flex items-center gap-3">
-                    <div class="w-1 h-6 bg-blue-400 rounded-full"></div>
-                    <h2 class="text-lg font-semibold text-gray-800">Pólizas</h2>
-                    <span id="polizasCount" class="text-xs bg-gray-100 px-2 py-1 rounded-full">0</span>
-                </div>
-                <div class="flex gap-2">
-                    <input type="text" id="searchPoliza" placeholder="Buscar por N° póliza, patente, tomador..." class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-64">
-                    <button id="exportCSVBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"><i class="fas fa-download"></i> CSV</button>
-                    <button id="exportExcelBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"><i class="fas fa-file-excel"></i> Excel</button>
-                    <button id="exportPDFBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"><i class="fas fa-file-pdf"></i> PDF</button>
+        <!-- Panel de dos columnas: izquierda = ramos, derecha = pólizas -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+            <!-- Panel izquierdo: tarjetas de ramo -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50">
+                        <h3 class="font-semibold text-gray-700 text-sm"><i class="fas fa-tags mr-2 text-blue-400"></i> Ramos</h3>
+                    </div>
+                    <div id="ramosListContainer" class="max-h-[70vh] overflow-y-auto divide-y divide-gray-100">
+                        <!-- Se llena dinámicamente -->
+                    </div>
                 </div>
             </div>
-            <div id="polizasListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Las tarjetas se generan aquí -->
+            <!-- Panel derecho: pólizas del ramo seleccionado -->
+            <div class="lg:col-span-9">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h3 id="ramoSeleccionadoTitulo" class="font-semibold text-gray-700 text-sm">Seleccione un ramo</h3>
+                        <span id="polizasCount" class="text-xs bg-gray-200 px-2 py-1 rounded-full">0</span>
+                    </div>
+                    <div id="polizasListContainer" class="p-4 max-h-[70vh] overflow-y-auto">
+                        <div class="text-center text-gray-400 py-8">Haga clic en un ramo para ver sus pólizas</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="mt-12 text-center text-xs text-gray-400 border-t border-gray-200 pt-6">
+        <div class="mt-8 text-center text-xs text-gray-400 border-t border-gray-200 pt-6">
             <p>Actualizado automáticamente desde Google Sheets · MCV Seguros</p>
+        </div>
+    </div>
+
+    <!-- Modal para bienes -->
+    <div id="modalItems" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-xl">
+            <div class="flex justify-between items-center border-b p-4">
+                <h3 class="font-bold text-lg" id="modalTitle">Bienes asegurados</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="overflow-y-auto p-4" id="modalContent"></div>
+            <div class="border-t p-3 flex justify-end">
+                <button id="exportModalItemsBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs flex items-center gap-1"><i class="fas fa-download"></i> Exportar CSV</button>
+            </div>
         </div>
     </div>
 
