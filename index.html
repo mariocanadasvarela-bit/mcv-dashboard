@@ -3,27 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>MCV Seguros | Dashboard Ejecutivo</title>
+    <title>MCV Seguros | Dashboard Inteligente</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { scrollbar-width: thin; scrollbar-color: #c7d2fe #f8fafc; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #c7d2fe; border: 2px solid #f8fafc; border-radius: 10px; }
+        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .tab-btn.active { background-color: white; border-bottom-width: 2px; border-color: #6366f1; color: #1e293b; }
+        .empresa-btn.active { background-color: #e0e7ff !important; color: #3730a3 !important; border-color: #a5b4fc !important; }
+        .card-hover { transition: all 0.2s; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .ver-bienes-btn { transition: all 0.2s; }
+        .ver-bienes-btn:hover { background-color: #e0e7ff !important; transform: translateY(-1px); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-700 font-['Inter'] antialiased selection:bg-indigo-100 selection:text-indigo-900">
+<body class="bg-slate-50 text-slate-700 antialiased">
 
-    <!-- Header -->
     <div class="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-20 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center flex-wrap gap-3">
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-800">MCV Seguros</h1>
-                <p class="text-slate-500 text-xs mt-0.5">Dashboard Ejecutivo · Gestión de seguros recurrentes y eventos puntuales</p>
+                <p class="text-slate-500 text-xs mt-0.5">Dashboard Inteligente · Conectado a Google Sheets</p>
             </div>
             <div class="flex gap-2 sm:gap-3 items-center">
-                <button id="refreshBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 transition px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm flex items-center gap-2">
+                <button id="refreshBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm flex items-center gap-2 active:scale-95">
                     <i class="fas fa-sync-alt text-xs"></i> Actualizar
                 </button>
                 <div class="bg-slate-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs text-slate-600">
@@ -35,105 +77,654 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <!-- Pestañas -->
         <div class="flex gap-3 mb-8 border-b border-slate-200 pb-2">
-            <button data-tab="recurrente" class="tab-btn active px-5 py-2 text-sm font-semibold rounded-t-lg bg-white text-slate-800 border-b-2 border-indigo-400">Seguros recurrentes</button>
-            <button data-tab="evento" class="tab-btn px-5 py-2 text-sm font-semibold rounded-t-lg bg-slate-50 text-slate-600 hover:text-slate-800">Eventos puntuales</button>
+            <button data-tab="recurrente" class="tab-btn active px-5 py-2 text-sm font-semibold rounded-t-lg bg-white text-slate-800 border-b-2 border-indigo-400 transition-all active:scale-95">Seguros recurrentes</button>
+            <button data-tab="evento" class="tab-btn px-5 py-2 text-sm font-semibold rounded-t-lg bg-slate-50 text-slate-600 hover:text-slate-800 transition-all active:scale-95">Eventos puntuales</button>
         </div>
 
-        <!-- Selector de empresa (orden: Ambas, GHM SRL, GHM Satelital) -->
-        <div id="empresaSelectorContainer" class="mb-6">
+        <div class="mb-6">
             <div class="inline-flex rounded-md shadow-sm" role="group">
-                <button type="button" data-empresa="Ambas" class="empresa-btn bg-indigo-100 text-indigo-800 px-4 py-2 text-sm font-medium rounded-l-lg border border-indigo-200">Ambas empresas</button>
-                <button type="button" data-empresa="GHM SRL" class="empresa-btn bg-white text-slate-700 px-4 py-2 text-sm font-medium border-t border-b border-slate-200 hover:bg-slate-50">GHM SRL</button>
-                <button type="button" data-empresa="GHM Satelital SRL" class="empresa-btn bg-white text-slate-700 px-4 py-2 text-sm font-medium rounded-r-lg border border-slate-200 hover:bg-slate-50">GHM Satelital SRL</button>
+                <button type="button" data-empresa="Ambas" class="empresa-btn bg-indigo-100 text-indigo-800 px-4 py-2 text-sm font-medium rounded-l-lg border border-indigo-200 transition-all active:scale-95">Ambas empresas</button>
+                <button type="button" data-empresa="GHM SRL" class="empresa-btn bg-white text-slate-700 px-4 py-2 text-sm font-medium border-t border-b border-slate-200 hover:bg-slate-50 transition-all active:scale-95">GHM SRL</button>
+                <button type="button" data-empresa="GHM Satelital SRL" class="empresa-btn bg-white text-slate-700 px-4 py-2 text-sm font-medium rounded-r-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">GHM Satelital SRL</button>
             </div>
         </div>
 
-        <!-- KPIs -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
-            <div class="rounded-3xl p-6 bg-gradient-to-br from-rose-50 to-white border border-rose-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-100/50 rounded-full blur-2xl"></div>
+            <div class="rounded-3xl p-6 bg-gradient-to-br from-rose-50 to-white border border-rose-100 shadow-sm">
                 <div class="text-rose-600 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3"><i class="fas fa-wallet"></i> Gasto mensual</div>
-                <div class="text-4xl font-black text-slate-800 tracking-tight relative z-10" id="kpiGastoMensual">$0</div>
+                <div class="text-4xl font-black text-slate-800" id="kpiGastoMensual">$0</div>
                 <div class="text-xs font-medium text-slate-500 mt-2" id="kpiGastoDetalle"></div>
             </div>
-            <div class="rounded-3xl p-6 bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-100/50 rounded-full blur-2xl"></div>
+            <div class="rounded-3xl p-6 bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 shadow-sm">
                 <div class="text-emerald-600 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3"><i class="fas fa-shield-check"></i> Suma asegurada</div>
-                <div class="text-4xl font-black text-slate-800 tracking-tight relative z-10" id="kpiSumaAsegurada">$0</div>
+                <div class="text-4xl font-black text-slate-800" id="kpiSumaAsegurada">$0</div>
             </div>
-            <div class="rounded-3xl p-6 bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-100/50 rounded-full blur-2xl"></div>
+            <div class="rounded-3xl p-6 bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 shadow-sm">
                 <div class="text-indigo-600 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3"><i class="fas fa-file-contract"></i> Pólizas activas</div>
-                <div class="text-4xl font-black text-slate-800 tracking-tight relative z-10" id="kpiPolizasActivas">0</div>
+                <div class="text-4xl font-black text-slate-800" id="kpiPolizasActivas">0</div>
             </div>
-            <div class="rounded-3xl p-6 bg-gradient-to-br from-amber-50 to-white border border-amber-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-100/50 rounded-full blur-2xl"></div>
+            <div class="rounded-3xl p-6 bg-gradient-to-br from-amber-50 to-white border border-amber-100 shadow-sm">
                 <div class="text-amber-600 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3"><i class="fas fa-building"></i> Aseguradoras</div>
-                <div class="text-4xl font-black text-slate-800 tracking-tight relative z-10" id="kpiAseguradoras">0</div>
+                <div class="text-4xl font-black text-slate-800" id="kpiAseguradoras">0</div>
             </div>
-            <div class="rounded-3xl p-6 bg-gradient-to-br from-sky-50 to-white border border-sky-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-sky-100/50 rounded-full blur-2xl"></div>
+            <div class="rounded-3xl p-6 bg-gradient-to-br from-sky-50 to-white border border-sky-100 shadow-sm">
                 <div class="text-sky-600 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3"><i class="fas fa-handshake"></i> Cauciones vigentes</div>
-                <div class="text-4xl font-black text-slate-800 tracking-tight relative z-10" id="kpiCauciones">$0</div>
+                <div class="text-4xl font-black text-slate-800" id="kpiCauciones">$0</div>
+                <div class="text-xs font-medium text-slate-500 mt-1" id="kpiCaucionesDetalle"></div>
             </div>
         </div>
 
-        <!-- Gráficos -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                <h3 class="font-semibold text-slate-700 mb-4 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-indigo-400"></i> Gasto mensual por aseguradora</h3>
+                <h3 class="font-semibold text-slate-700 mb-4 text-sm"><i class="fas fa-chart-simple mr-2 text-indigo-400"></i> Gasto mensual por aseguradora</h3>
                 <canvas id="chartGastoAseguradora" height="200"></canvas>
             </div>
             <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                <h3 class="font-semibold text-slate-700 mb-4 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-indigo-400"></i> Gasto mensual por ramo</h3>
+                <h3 class="font-semibold text-slate-700 mb-4 text-sm"><i class="fas fa-chart-simple mr-2 text-indigo-400"></i> Gasto mensual por ramo</h3>
                 <canvas id="chartGastoRamo" height="200"></canvas>
             </div>
         </div>
 
-        <!-- Sección: Resumen de ramos (tarjetas de ramo) -->
+        <div class="flex flex-wrap justify-between items-center mb-5 gap-3">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="searchPoliza" placeholder="Buscar por N° póliza, tomador, ramo, aseguradora..." class="pl-9 pr-4 py-2 border border-slate-200 rounded-xl w-80 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm">
+            </div>
+            <div class="flex gap-2">
+                <span id="searchCount" class="text-xs text-slate-500 self-center mr-2"></span>
+                <button id="exportCSVBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 active:scale-95 transition-all"><i class="fas fa-file-csv"></i> CSV</button>
+                <button id="exportExcelBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 active:scale-95 transition-all"><i class="fas fa-file-excel"></i> Excel</button>
+                <button id="exportPDFBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 active:scale-95 transition-all"><i class="fas fa-file-pdf"></i> PDF</button>
+            </div>
+        </div>
+
         <div id="ramosSection">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-1 h-6 bg-indigo-400 rounded-full"></div>
                 <h2 class="text-lg font-bold text-slate-800">Resumen por ramo</h2>
             </div>
-            <div id="ramosContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <!-- Tarjetas de ramo se generan dinámicamente -->
-            </div>
+            <div id="ramosContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-fade-in"></div>
         </div>
 
-        <!-- Sección: Pólizas de un ramo (inicialmente oculta) -->
         <div id="polizasSection" class="hidden">
             <div class="flex items-center gap-3 mb-4">
-                <button id="backToRamosBtn" class="text-indigo-600 hover:text-indigo-800 text-sm flex items-center gap-1"><i class="fas fa-arrow-left"></i> Volver a ramos</button>
+                <button id="backToRamosBtn" class="text-indigo-600 hover:text-indigo-800 text-sm flex items-center gap-1 active:scale-95 transition-all"><i class="fas fa-arrow-left"></i> Volver a ramos</button>
                 <div class="w-1 h-6 bg-indigo-400 rounded-full"></div>
-                <h2 class="text-lg font-bold text-slate-800" id="ramosTitle">Pólizas de <span id="ramoSeleccionadoNombre"></span></h2>
+                <h2 class="text-lg font-bold text-slate-800">Pólizas de <span id="ramoSeleccionadoNombre"></span></h2>
             </div>
-            <div id="polizasContainer" class="space-y-4">
-                <!-- Tarjetas de póliza del ramo seleccionado -->
-            </div>
+            <div id="polizasContainer" class="space-y-4 animate-fade-in"></div>
         </div>
 
         <div class="mt-12 text-center text-xs text-slate-400 border-t border-slate-200 pt-6">
-            <p>Actualizado automáticamente desde Google Sheets · MCV Seguros</p>
+            <p>Datos sincronizados con Google Sheets · MCV Seguros</p>
         </div>
     </div>
 
-    <!-- Modal para bienes -->
     <div id="modalItems" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-xl">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden shadow-xl animate-fade-in">
             <div class="flex justify-between items-center border-b p-5">
                 <h3 class="font-bold text-lg text-slate-800" id="modalTitle">Bienes asegurados</h3>
-                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 active:scale-95 transition-all"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div class="overflow-y-auto p-5" id="modalContent"></div>
             <div class="border-t p-4 flex justify-end gap-3">
-                <button id="exportItemsBtn" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2"><i class="fas fa-download"></i> Exportar estos bienes</button>
+                <button id="exportItemsBtn" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 active:scale-95 transition-all"><i class="fas fa-download"></i> Exportar estos bienes</button>
             </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // ======================== CONFIGURACIÓN ========================
+        const POLIZAS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTizUhGOMK4CqFeegbAtWciBpS29ZZ8fvqaednZUMlwOFMZ9lzK0-0PpcJyacyifXeSJazpTIcLqL2q/pub?gid=0&single=true&output=csv';
+        const ITEMS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTizUhGOMK4CqFeegbAtWciBpS29ZZ8fvqaednZUMlwOFMZ9lzK0-0PpcJyacyifXeSJazpTIcLqL2q/pub?gid=1897816776&single=true&output=csv';
+        
+        // Estado global
+        let polizasData = [];
+        let itemsData = [];
+        let currentTab = 'recurrente';
+        let currentEmpresa = 'Ambas';
+        let currentPolizaSearch = '';
+        let selectedRamo = null;
+        let charts = {};
+        let updateInterval = null;
+
+        // ======================== FUNCIONES AUXILIARES ========================
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) overlay.classList.remove('hidden');
+            else overlay.classList.add('hidden');
+        }
+
+        function abreviaturaNumero(num) {
+            if (num === undefined || num === null || isNaN(num)) return '$0';
+            if (num >= 1e9) return '$' + (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+            if (num >= 1e6) return '$' + (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+            if (num >= 1e3) return '$' + (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+            return '$' + num.toLocaleString();
+        }
+
+        function getVigenciaStatus(fechaHastaStr) {
+            if (!fechaHastaStr) return { texto: 'SIN FECHA', color: 'bg-gray-100 text-gray-600' };
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+            let fechaHasta;
+            if (typeof fechaHastaStr === 'string' && fechaHastaStr.includes('-')) {
+                const partes = fechaHastaStr.split('-');
+                if (partes.length === 3) fechaHasta = new Date(partes[0], partes[1]-1, partes[2]);
+                else fechaHasta = new Date(fechaHastaStr);
+            } else {
+                const partes = fechaHastaStr.split('/');
+                if (partes.length === 3) fechaHasta = new Date(partes[2], partes[1]-1, partes[0]);
+                else fechaHasta = new Date(fechaHastaStr);
+            }
+            if (isNaN(fechaHasta)) return { texto: 'FECHA INVÁLIDA', color: 'bg-gray-100 text-gray-600' };
+            const diffDays = Math.ceil((fechaHasta - hoy) / (1000 * 60 * 60 * 24));
+            if (diffDays < 0) return { texto: 'VENCIDO', color: 'bg-red-100 text-red-700' };
+            if (diffDays <= 30) return { texto: 'PRÓXIMO A VENCER', color: 'bg-amber-100 text-amber-700' };
+            return { texto: 'VIGENTE', color: 'bg-emerald-100 text-emerald-700' };
+        }
+
+        function normalizarAseguradora(nombre) {
+            if (nombre && nombre.toString().startsWith('La Segunda')) return 'La Segunda';
+            return nombre;
+        }
+
+        function getPolizasFiltradas() {
+            let base = currentTab === 'recurrente' 
+                ? polizasData.filter(p => p.proyecto_norm === 'Estructura Operativa')
+                : polizasData.filter(p => p.proyecto_norm !== 'Estructura Operativa' && p.proyecto_norm);
+            
+            if (currentEmpresa === 'GHM SRL') base = base.filter(p => p.empresa === 'GHM SRL');
+            else if (currentEmpresa === 'GHM Satelital SRL') base = base.filter(p => p.empresa === 'GHM Satelital SRL');
+            
+            if (currentPolizaSearch) {
+                const s = currentPolizaSearch.toLowerCase();
+                base = base.filter(p => 
+                    (p.nro_poliza && p.nro_poliza.toLowerCase().includes(s)) ||
+                    (p.tomador && p.tomador.toLowerCase().includes(s)) ||
+                    (p.ramo && p.ramo.toLowerCase().includes(s)) ||
+                    (p.aseguradora && p.aseguradora.toLowerCase().includes(s))
+                );
+            }
+            return base;
+        }
+
+        // ======================== CARGAR DATOS DESDE CSV ========================
+        async function fetchCSV(url) {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const text = await response.text();
+            const workbook = XLSX.read(text, { type: 'string', raw: true });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            return XLSX.utils.sheet_to_json(firstSheet);
+        }
+
+        async function cargarDatosDesdeSheets() {
+            showLoading(true);
+            try {
+                const [polizasRaw, itemsRaw] = await Promise.all([
+                    fetchCSV(POLIZAS_CSV_URL),
+                    fetchCSV(ITEMS_CSV_URL)
+                ]);
+                
+                polizasData = polizasRaw.map(row => ({
+                    id_poliza: row.ID_Poliza,
+                    nro_poliza: row['Nro Póliza'] || row.Nro_Póliza,
+                    tomador: row.Tomador,
+                    empresa: row.Tomador,
+                    ramo: row.Ramo,
+                    aseguradora: normalizarAseguradora(row.Aseguradora),
+                    costo_mensual_ars: parseFloat(row['Costo Mensual ARS'] || 0),
+                    costo_mensual_usd: parseFloat(row['Costo Mensual USD'] || 0),
+                    cobertura_corta: row['Cobertura Corta'],
+                    suma_asegurada_total: parseFloat(row['Suma Asegurada Total ARS'] || 0),
+                    cantidad_items: 0,
+                    vigencia_desde: row['Vigencia Desde'] ? row['Vigencia Desde'].split(' ')[0] : '',
+                    vigencia_hasta: row['Vigencia Hasta (fecha)'] ? row['Vigencia Hasta (fecha)'].split(' ')[0] : '',
+                    proyecto_norm: row['Proyecto / Centro de Costo'],
+                    esCaucion: row.Ramo === 'Caución',
+                    costo_total_vigencia: (row.Ramo === 'Caución') ? (parseFloat(row['Costo Mensual ARS']) || parseFloat(row['Costo Mensual USD']) || 0) : null,
+                    moneda_total: (row.Ramo === 'Caución') ? (parseFloat(row['Costo Mensual ARS']) ? 'ARS' : 'USD') : null
+                }));
+                
+                itemsData = itemsRaw.map(row => ({
+                    id_poliza: row.ID_Poliza,
+                    item: row['Ítem asegurado'],
+                    identificacion: row['Identificación (Patente/DNI/Serie)'],
+                    suma_asegurada_ars: parseFloat(row['Suma Asegurada ARS'] || 0),
+                    suma_asegurada_usd: parseFloat(row['Suma Asegurada USD'] || 0)
+                }));
+                
+                // Actualizar cantidad_items
+                const itemCount = {};
+                itemsData.forEach(item => { itemCount[item.id_poliza] = (itemCount[item.id_poliza] || 0) + 1; });
+                polizasData.forEach(p => { p.cantidad_items = itemCount[p.id_poliza] || 0; });
+                
+                localStorage.setItem('mcv_polizas_cache', JSON.stringify(polizasData));
+                localStorage.setItem('mcv_items_cache', JSON.stringify(itemsData));
+                localStorage.setItem('mcv_last_update', new Date().toISOString());
+                
+                document.getElementById('lastUpdate').innerHTML = new Date().toLocaleTimeString();
+                refreshAll();
+                showLoading(false);
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                const cachedPolizas = localStorage.getItem('mcv_polizas_cache');
+                const cachedItems = localStorage.getItem('mcv_items_cache');
+                if (cachedPolizas && cachedItems) {
+                    polizasData = JSON.parse(cachedPolizas);
+                    itemsData = JSON.parse(cachedItems);
+                    refreshAll();
+                    showLoading(false);
+                    alert('⚠️ Usando datos en caché. No se pudo conectar con Google Sheets.');
+                } else {
+                    showLoading(false);
+                    alert('❌ Error de conexión y no hay datos en caché. Verifica tu conexión a internet.');
+                }
+            }
+        }
+
+        // ======================== KPI Y GRÁFICOS ========================
+        function updateKPIs(polizas) {
+            let gastoARS = 0, gastoUSD = 0;
+            for (const p of polizas) {
+                if (!p.esCaucion) {
+                    gastoARS += p.costo_mensual_ars || 0;
+                    gastoUSD += p.costo_mensual_usd || 0;
+                }
+            }
+            document.getElementById('kpiGastoMensual').innerHTML = abreviaturaNumero(gastoARS + gastoUSD);
+            document.getElementById('kpiGastoDetalle').innerHTML = `ARS ${gastoARS.toLocaleString()} / USD ${gastoUSD.toLocaleString()}`;
+            
+            let suma = 0;
+            for (const p of polizas) suma += p.suma_asegurada_total || 0;
+            document.getElementById('kpiSumaAsegurada').innerHTML = abreviaturaNumero(suma);
+            document.getElementById('kpiPolizasActivas').innerHTML = polizas.length;
+            
+            const aseguradorasUnicas = new Set(polizas.map(p => p.aseguradora));
+            document.getElementById('kpiAseguradoras').innerHTML = aseguradorasUnicas.size;
+            
+            let caucARS = 0, caucUSD = 0;
+            for (const p of polizas) {
+                if (p.esCaucion && p.costo_total_vigencia) {
+                    if (p.moneda_total === 'ARS') caucARS += p.costo_total_vigencia;
+                    else caucUSD += p.costo_total_vigencia;
+                }
+            }
+            let txtPrincipal = '', txtDetalle = '';
+            if (caucARS) { txtPrincipal = abreviaturaNumero(caucARS); txtDetalle = `Total ARS: ${caucARS.toLocaleString()}`; }
+            if (caucUSD) { 
+                if (txtPrincipal) txtPrincipal += ` + ${abreviaturaNumero(caucUSD)}`;
+                else txtPrincipal = abreviaturaNumero(caucUSD);
+                txtDetalle = txtDetalle ? `${txtDetalle} | USD: ${caucUSD.toLocaleString()}` : `USD: ${caucUSD.toLocaleString()}`;
+            }
+            if (!txtPrincipal) txtPrincipal = '$0';
+            document.getElementById('kpiCauciones').innerHTML = txtPrincipal;
+            document.getElementById('kpiCaucionesDetalle').innerHTML = txtDetalle;
+        }
+
+        function updateCharts(polizas) {
+            const mensuales = polizas.filter(p => !p.esCaucion);
+            
+            const porAseguradora = {};
+            for (const p of mensuales) {
+                const costo = (p.costo_mensual_ars || 0) + (p.costo_mensual_usd || 0);
+                porAseguradora[p.aseguradora] = (porAseguradora[p.aseguradora] || 0) + costo;
+            }
+            renderChart('chartGastoAseguradora', porAseguradora, 'Gasto mensual ARS');
+            
+            const porRamo = {};
+            for (const p of mensuales) {
+                const costo = (p.costo_mensual_ars || 0) + (p.costo_mensual_usd || 0);
+                porRamo[p.ramo] = (porRamo[p.ramo] || 0) + costo;
+            }
+            renderChart('chartGastoRamo', porRamo, 'Gasto mensual ARS');
+        }
+
+        function renderChart(canvasId, data, label) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+            if (charts[canvasId]) charts[canvasId].destroy();
+            charts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets: [{ label, data: values, backgroundColor: '#c7d2fe', borderRadius: 6 }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
+            });
+        }
+
+        // ======================== RENDERIZADO ========================
+        function getIconForRamo(ramo) {
+            const r = ramo.toLowerCase();
+            if (r.includes('automotor')) return 'fa-car';
+            if (r.includes('art')) return 'fa-briefcase-medical';
+            if (r.includes('vida')) return 'fa-heartbeat';
+            if (r.includes('rc')) return 'fa-shield-alt';
+            if (r.includes('caución')) return 'fa-handshake';
+            if (r.includes('robo')) return 'fa-lock';
+            return 'fa-file-alt';
+        }
+
+        function renderRamosCards(polizas) {
+            const grupos = new Map();
+            for (const p of polizas) {
+                if (!grupos.has(p.ramo)) grupos.set(p.ramo, []);
+                grupos.get(p.ramo).push(p);
+            }
+            const container = document.getElementById('ramosContainer');
+            container.innerHTML = '';
+            for (const [ramo, pols] of grupos) {
+                let gastoARS = 0, gastoUSD = 0, sumaAsegurada = 0;
+                const allItems = [];
+                for (const p of pols) {
+                    if (p.esCaucion) {
+                        if (p.moneda_total === 'ARS') gastoARS += p.costo_total_vigencia;
+                        else gastoUSD += p.costo_total_vigencia;
+                    } else {
+                        gastoARS += p.costo_mensual_ars || 0;
+                        gastoUSD += p.costo_mensual_usd || 0;
+                    }
+                    sumaAsegurada += p.suma_asegurada_total || 0;
+                    const its = itemsData.filter(i => i.id_poliza === p.id_poliza);
+                    allItems.push(...its.map(i => i.item));
+                }
+                const unicos = [...new Set(allItems)];
+                const resumen = unicos.slice(0,2).join(', ') + (unicos.length>2 ? ` +${unicos.length-2} más` : (unicos.length===0 ? 'Sin bienes' : ''));
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl p-5 border border-slate-100 shadow-sm cursor-pointer card-hover';
+                card.addEventListener('click', () => {
+                    selectedRamo = ramo;
+                    guardarEstadoCompleto();
+                    const polsRamo = polizas.filter(p => p.ramo === selectedRamo);
+                    renderPolizasDeRamo(polsRamo);
+                    document.getElementById('ramosSection').classList.add('hidden');
+                    document.getElementById('polizasSection').classList.remove('hidden');
+                    document.getElementById('ramoSeleccionadoNombre').innerText = ramo;
+                });
+                let gastoTexto = '';
+                if (gastoARS > 0 && gastoUSD > 0) gastoTexto = `${abreviaturaNumero(gastoARS)} ARS + ${abreviaturaNumero(gastoUSD)} USD`;
+                else if (gastoARS > 0) gastoTexto = `${abreviaturaNumero(gastoARS)} ARS`;
+                else if (gastoUSD > 0) gastoTexto = `${abreviaturaNumero(gastoUSD)} USD`;
+                else gastoTexto = '$0';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fas ${getIconForRamo(ramo)} text-indigo-400 text-xl"></i>
+                            <h3 class="font-bold text-slate-800 text-lg">${ramo}</h3>
+                        </div>
+                        <span class="text-xs bg-slate-100 px-2 py-1 rounded-full">${pols.length} pólizas</span>
+                    </div>
+                    <div class="text-sm text-slate-600 mb-2">
+                        <div>Gasto: ${gastoTexto}</div>
+                        <div class="text-xs text-slate-400">Suma asegurada: ${abreviaturaNumero(sumaAsegurada)}</div>
+                    </div>
+                    <div class="text-xs text-slate-500 truncate">📦 ${resumen}</div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        function renderPolizasDeRamo(polizas) {
+            const container = document.getElementById('polizasContainer');
+            container.innerHTML = '';
+            for (const p of polizas) {
+                const items = itemsData.filter(i => i.id_poliza === p.id_poliza);
+                let costoStr = '';
+                if (p.esCaucion) {
+                    costoStr = `${abreviaturaNumero(p.costo_total_vigencia)} ${p.moneda_total} (total vigencia)`;
+                } else {
+                    let partes = [];
+                    if (p.costo_mensual_ars) partes.push(`${abreviaturaNumero(p.costo_mensual_ars)} ARS/mes`);
+                    if (p.costo_mensual_usd) partes.push(`${abreviaturaNumero(p.costo_mensual_usd)} USD/mes`);
+                    costoStr = partes.join(' + ') || '$0';
+                }
+                const vigencia = getVigenciaStatus(p.vigencia_hasta);
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden';
+                card.innerHTML = `
+                    <div class="p-5">
+                        <div class="flex justify-between items-start flex-wrap gap-3">
+                            <div>
+                                <div class="text-indigo-600 text-sm font-semibold uppercase">${p.ramo}</div>
+                                <div class="text-xl font-bold text-slate-800 mt-1">${p.cobertura_corta || 'Cobertura específica'}</div>
+                                <div class="text-sm text-slate-600 mt-1">${p.tomador}</div>
+                            </div>
+                            <div class="bg-indigo-50 rounded-xl px-4 py-2 text-right">
+                                <div class="text-xs text-slate-500">Inversión en riesgo</div>
+                                <div class="text-lg font-bold text-slate-800">${costoStr}</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-wrap justify-between items-center gap-3">
+                            <div class="flex flex-wrap gap-4 text-sm">
+                                <div><span class="text-slate-400"># Bienes:</span> <span class="font-medium">${p.cantidad_items}</span></div>
+                                <div><span class="text-slate-400">Suma asegurada:</span> <span class="font-medium">${abreviaturaNumero(p.suma_asegurada_total)}</span></div>
+                                <div><span class="text-slate-400">Vigencia:</span> <span class="font-medium">${p.vigencia_desde} al ${p.vigencia_hasta}</span></div>
+                                <div><span class="${vigencia.color} text-xs px-2 py-0.5 rounded-full">${vigencia.texto}</span></div>
+                            </div>
+                            <button class="ver-bienes-btn bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 active:scale-95" data-id="${p.id_poliza}">
+                                <i class="fas fa-box-open"></i> Ver bienes (${p.cantidad_items})
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+            
+            document.querySelectorAll('.ver-bienes-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = btn.dataset.id;
+                    const pol = polizasData.find(p => p.id_poliza === id);
+                    const its = itemsData.filter(i => i.id_poliza === id);
+                    const modal = document.getElementById('modalItems');
+                    document.getElementById('modalTitle').innerText = `Bienes asegurados - ${pol.nro_poliza} (${pol.ramo})`;
+                    if (its.length === 0) {
+                        document.getElementById('modalContent').innerHTML = '<p class="text-center py-6 text-slate-500 font-medium">No hay bienes registrados.</p>';
+                    } else {
+                        let html = `<div class="overflow-x-auto"><table class="min-w-full text-sm"><thead class="bg-slate-50 border-b border-slate-200"><tr><th class="text-left py-3 px-4 font-semibold">Ítem</th><th class="text-left py-3 px-4 font-semibold">Identificación</th><th class="text-right py-3 px-4 font-semibold">Suma ARS</th><th class="text-right py-3 px-4 font-semibold">Suma USD</th></tr></thead><tbody>`;
+                        for (const it of its) {
+                            html += `<tr class="border-b hover:bg-slate-50"><td class="py-3 px-4">${it.item}</td><td class="py-3 px-4">${it.identificacion}</td><td class="text-right py-3 px-4">${abreviaturaNumero(it.suma_asegurada_ars)}</td><td class="text-right py-3 px-4">${it.suma_asegurada_usd ? abreviaturaNumero(it.suma_asegurada_usd) : '-'}</td></tr>`;
+                        }
+                        html += `</tbody></table></div>`;
+                        document.getElementById('modalContent').innerHTML = html;
+                    }
+                    modal.classList.remove('hidden');
+                });
+            });
+        }
+
+        function actualizarContadorBusqueda(polizas) {
+            const countSpan = document.getElementById('searchCount');
+            if (currentPolizaSearch) {
+                countSpan.innerText = `${polizas.length} resultado${polizas.length !== 1 ? 's' : ''}`;
+            } else {
+                countSpan.innerText = '';
+            }
+        }
+
+        function refreshAll() {
+            const polizas = getPolizasFiltradas();
+            updateKPIs(polizas);
+            updateCharts(polizas);
+            actualizarContadorBusqueda(polizas);
+            if (selectedRamo) {
+                const pols = polizas.filter(p => p.ramo === selectedRamo);
+                if (pols.length) renderPolizasDeRamo(pols);
+                else { selectedRamo = null; document.getElementById('ramosSection').classList.remove('hidden'); document.getElementById('polizasSection').classList.add('hidden'); renderRamosCards(polizas); }
+            } else {
+                renderRamosCards(polizas);
+            }
+        }
+
+        // ======================== EXPORTACIONES ========================
+        async function exportToPDF() {
+            const element = document.querySelector('.max-w-7xl');
+            if (!element) return;
+            const originalOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'auto';
+            const canvas = await html2canvas(element, { scale: 2, logging: false });
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 297;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+            pdf.save('mcv_dashboard.pdf');
+            document.body.style.overflow = originalOverflow;
+        }
+
+        function exportToCSV() {
+            const pols = getPolizasFiltradas();
+            const exportData = pols.map(p => ({
+                'Nro Póliza': p.nro_poliza,
+                'Tomador': p.tomador,
+                'Aseguradora': p.aseguradora,
+                'Ramo': p.ramo,
+                'Cobertura': p.cobertura_corta,
+                'Costo': p.esCaucion ? `${p.costo_total_vigencia} ${p.moneda_total} (total)` : `${p.costo_mensual_ars || 0} ARS/mes ${p.costo_mensual_usd ? `+ ${p.costo_mensual_usd} USD/mes` : ''}`,
+                'Suma Asegurada': p.suma_asegurada_total,
+                'Vigencia Desde': p.vigencia_desde,
+                'Vigencia Hasta': p.vigencia_hasta
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Pólizas');
+            XLSX.writeFile(wb, `polizas_${currentTab}_${currentEmpresa}.xlsx`);
+        }
+
+        function exportItemsModal() {
+            const modalContent = document.getElementById('modalContent');
+            const tabla = modalContent?.querySelector('table');
+            if (!tabla) return;
+            let csv = [];
+            const rows = tabla.querySelectorAll('tr');
+            for (let row of rows) {
+                const cols = row.querySelectorAll('th, td');
+                const rowData = Array.from(cols).map(c => c.innerText);
+                csv.push(rowData.join(','));
+            }
+            const blob = new Blob(["\uFEFF" + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'bienes.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        // ======================== ESTADO Y PERSISTENCIA ========================
+        function guardarEstadoCompleto() {
+            const estado = {
+                currentTab, currentEmpresa, currentPolizaSearch, selectedRamo
+            };
+            localStorage.setItem('mcv_estado_completo', JSON.stringify(estado));
+        }
+
+        function restaurarEstadoCompleto() {
+            const estadoGuardado = localStorage.getItem('mcv_estado_completo');
+            if (estadoGuardado) {
+                try {
+                    const estado = JSON.parse(estadoGuardado);
+                    if (estado.currentTab) currentTab = estado.currentTab;
+                    if (estado.currentEmpresa) currentEmpresa = estado.currentEmpresa;
+                    if (estado.currentPolizaSearch) currentPolizaSearch = estado.currentPolizaSearch;
+                    if (estado.selectedRamo) selectedRamo = estado.selectedRamo;
+                    
+                    const tabBtns = document.querySelectorAll('.tab-btn');
+                    tabBtns.forEach(btn => {
+                        if (btn.dataset.tab === currentTab) {
+                            tabBtns.forEach(b => b.classList.remove('active', 'border-b-2', 'border-indigo-400', 'text-slate-800'));
+                            btn.classList.add('active', 'border-b-2', 'border-indigo-400', 'text-slate-800');
+                        }
+                    });
+                    
+                    const empresaBtns = document.querySelectorAll('.empresa-btn');
+                    empresaBtns.forEach(btn => {
+                        if (btn.dataset.empresa === currentEmpresa) {
+                            empresaBtns.forEach(b => b.classList.remove('active', 'bg-indigo-100', 'text-indigo-800'));
+                            btn.classList.add('active', 'bg-indigo-100', 'text-indigo-800');
+                        }
+                    });
+                    
+                    document.getElementById('searchPoliza').value = currentPolizaSearch;
+                } catch(e) {}
+            }
+        }
+
+        // ======================== INICIALIZACIÓN ========================
+        document.addEventListener('DOMContentLoaded', async () => {
+            restaurarEstadoCompleto();
+            await cargarDatosDesdeSheets();
+            
+            document.getElementById('lastUpdate').innerHTML = new Date().toLocaleTimeString();
+            document.getElementById('refreshBtn').addEventListener('click', () => cargarDatosDesdeSheets());
+            document.getElementById('backToRamosBtn').addEventListener('click', () => {
+                selectedRamo = null;
+                guardarEstadoCompleto();
+                document.getElementById('ramosSection').classList.remove('hidden');
+                document.getElementById('polizasSection').classList.add('hidden');
+                refreshAll();
+            });
+            document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('modalItems').classList.add('hidden'));
+            window.addEventListener('click', (e) => { if (e.target === document.getElementById('modalItems')) document.getElementById('modalItems').classList.add('hidden'); });
+            document.getElementById('searchPoliza').addEventListener('input', (e) => { 
+                currentPolizaSearch = e.target.value; 
+                guardarEstadoCompleto();
+                refreshAll(); 
+            });
+            document.getElementById('exportCSVBtn').addEventListener('click', exportToCSV);
+            document.getElementById('exportExcelBtn').addEventListener('click', exportToCSV);
+            document.getElementById('exportPDFBtn').addEventListener('click', exportToPDF);
+            document.getElementById('exportItemsBtn').addEventListener('click', exportItemsModal);
+            
+            const empresaBtns = document.querySelectorAll('.empresa-btn');
+            empresaBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    empresaBtns.forEach(b => b.classList.remove('active', 'bg-indigo-100', 'text-indigo-800'));
+                    btn.classList.add('active', 'bg-indigo-100', 'text-indigo-800');
+                    currentEmpresa = btn.dataset.empresa;
+                    guardarEstadoCompleto();
+                    selectedRamo = null;
+                    document.getElementById('ramosSection').classList.remove('hidden');
+                    document.getElementById('polizasSection').classList.add('hidden');
+                    refreshAll();
+                });
+            });
+            
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabBtns.forEach(b => b.classList.remove('active', 'border-b-2', 'border-indigo-400', 'text-slate-800'));
+                    btn.classList.add('active', 'border-b-2', 'border-indigo-400', 'text-slate-800');
+                    currentTab = btn.dataset.tab;
+                    guardarEstadoCompleto();
+                    selectedRamo = null;
+                    document.getElementById('ramosSection').classList.remove('hidden');
+                    document.getElementById('polizasSection').classList.add('hidden');
+                    refreshAll();
+                });
+            });
+            
+            if (updateInterval) clearInterval(updateInterval);
+            updateInterval = setInterval(() => {
+                cargarDatosDesdeSheets();
+            }, 5 * 60 * 1000);
+        });
+    </script>
 </body>
 </html>
