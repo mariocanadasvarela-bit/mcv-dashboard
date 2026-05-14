@@ -1,68 +1,38 @@
-/* style.css - MCV Seguros Dashboard - Estilo premium pastel */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f1f5f9;
+/* style.css - MCV Seguros Dashboard - Estilos adicionales */
+.accion-rapida {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    transition: all 0.2s;
 }
-::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+.accion-rapida:hover {
+    background-color: #eef2ff;
 }
-::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 10px;
+.solicitar-certificado, .denunciar-siniestro {
+    cursor: pointer;
+    transition: all 0.2s;
 }
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
+.solicitar-certificado:hover, .denunciar-siniestro:hover {
+    transform: translateY(-1px);
 }
-body {
-    background-color: #f8fafc;
-    font-family: 'Inter', sans-serif;
+#polizasListContainer {
+    max-height: none;
 }
-button, select, input {
-    transition: all 0.15s ease;
+.bg-indigo-50 {
+    background-color: #eef2ff;
 }
-button:focus-visible, select:focus-visible, input:focus-visible {
-    outline: 2px solid #a5b4fc;
-    outline-offset: 2px;
+.text-indigo-700 {
+    color: #4338ca;
 }
-canvas {
-    max-height: 100%;
-}
-.tab-btn.active {
-    background-color: white;
-}
-.empresa-btn {
-    transition: all 0.1s;
-}
-#polizasListContainer table {
-    border-collapse: separate;
-    border-spacing: 0;
-}
-#polizasListContainer th, #polizasListContainer td {
-    border-bottom: 1px solid #f1f5f9;
-}
-#polizasListContainer tr:hover td {
-    background-color: #f8fafc;
-}
-@media print {
-    body {
-        background: white;
-        font-size: 10pt;
-    }
-    button, .tab-btn, .empresa-btn, #exportCSVBtn, #refreshBtn, #exportPDFBtn, #exportExcelBtn {
-        display: none !important;
-    }
-    canvas {
-        max-width: 100%;
-        page-break-inside: avoid;
-    }
-}
-@media (max-width: 768px) {
-    #polizasListContainer {
-        overflow-x: auto;
-    }
-    #polizasListContainer table {
-        min-width: 800px;
-    }
-}
+/* Ajustes para badges dinámicos */
+.bg-indigo-100 { background-color: #e0e7ff; }
+.text-indigo-700 { color: #4338ca; }
+.bg-amber-100 { background-color: #fef3c7; }
+.text-amber-700 { color: #b45309; }
+.bg-sky-100 { background-color: #e0f2fe; }
+.text-sky-700 { color: #0369a1; }
+.bg-slate-100 { background-color: #f1f5f9; }
+.text-slate-700 { color: #334155; }
