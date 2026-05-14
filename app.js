@@ -1,4 +1,4 @@
-// app.js - MCV Seguros Dashboard - Versión definitiva estilo tarjetas
+// app.js - MCV Seguros Dashboard - Versión corregida (tarjetas visibles)
 const POLIZAS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTizUhGOMK4CqFeegbAtWciBpS29ZZ8fvqaednZUMlwOFMZ9lzK0-0PpcJyacyifXeSJazpTIcLqL2q/pub?gid=0&single=true&output=csv';
 const ITEMS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTizUhGOMK4CqFeegbAtWciBpS29ZZ8fvqaednZUMlwOFMZ9lzK0-0PpcJyacyifXeSJazpTIcLqL2q/pub?gid=1897816776&single=true&output=csv';
 
@@ -11,7 +11,6 @@ let currentEmpresa = 'Ambas';
 let currentRamoFiltro = null;
 let currentPolizaSearch = '';
 
-// Cargar preferencia guardada
 const savedEmpresa = localStorage.getItem('mcv_empresa');
 if (savedEmpresa && ['GHM SRL', 'GHM Satelital SRL', 'Ambas'].includes(savedEmpresa)) currentEmpresa = savedEmpresa;
 
@@ -99,17 +98,22 @@ async function loadAllData() {
         };
     });
     
-    let itemsMap = new Map();
-    (itemsCSV.length ? itemsCSV : []).forEach(i => {
-        let idPol = i.ID_Poliza?.toString().trim() || '';
-        if (!itemsMap.has(idPol)) itemsMap.set(idPol, []);
-        itemsMap.get(idPol).push({
-            item: limpiarTexto(i['Ítem asegurado'] || ''),
-            identificacion: limpiarTexto(i['Identificación (Patente/DNI/Serie)'] || ''),
-            suma_asegurada_ars: parseFloat(i['Suma Asegurada ARS'] || 0),
-            suma_asegurada_usd: parseFloat(i['Suma Asegurada USD'] || 0)
+    // Construir itemsData a partir del CSV
+    itemsData = [];
+    if (itemsCSV.length) {
+        itemsCSV.forEach(i => {
+            let idPol = i.ID_Poliza?.toString().trim() || '';
+            if (idPol) {
+                itemsData.push({
+                    id_poliza: idPol,
+                    item: limpiarTexto(i['Ítem asegurado'] || ''),
+                    identificacion: limpiarTexto(i['Identificación (Patente/DNI/Serie)'] || ''),
+                    suma_asegurada_ars: parseFloat(i['Suma Asegurada ARS'] || 0),
+                    suma_asegurada_usd: parseFloat(i['Suma Asegurada USD'] || 0)
+                });
+            }
         });
-    });
+    }
     
     // Unificar empresas
     polizasData = polizasData.map(p => {
@@ -122,20 +126,18 @@ async function loadAllData() {
         return { ...p, empresa, pagador };
     });
     
-    // Calcular suma asegurada total por póliza (suma de items)
+    // Calcular suma asegurada total por póliza y cantidad de items
     const sumaPorPoliza = new Map();
-    for (const pol of polizasData) {
-        const items = itemsMap.get(pol.id_poliza) || [];
-        let suma = 0;
-        for (const item of items) {
-            suma += (item.suma_asegurada_ars || 0) + (item.suma_asegurada_usd || 0) * tipoCambioUSD;
-        }
-        sumaPorPoliza.set(pol.id_poliza, suma);
+    const countPorPoliza = new Map();
+    for (const item of itemsData) {
+        const id = item.id_poliza;
+        sumaPorPoliza.set(id, (sumaPorPoliza.get(id) || 0) + (item.suma_asegurada_ars || 0) + (item.suma_asegurada_usd || 0) * tipoCambioUSD);
+        countPorPoliza.set(id, (countPorPoliza.get(id) || 0) + 1);
     }
     polizasData = polizasData.map(p => ({
         ...p,
         suma_asegurada_total: sumaPorPoliza.get(p.id_poliza) || 0,
-        cantidad_items: (itemsMap.get(p.id_poliza) || []).length
+        cantidad_items: countPorPoliza.get(p.id_poliza) || 0
     }));
     
     renderCurrentTab();
@@ -247,6 +249,10 @@ function renderFiltrosRapidos(polizas) {
 function renderPolizasCards(polizas) {
     const container = document.getElementById('polizasListContainer');
     container.innerHTML = '';
+    if (!polizas.length) {
+        container.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500">No hay pólizas que coincidan con los filtros.</div>';
+        return;
+    }
     for (const poliza of polizas) {
         const items = itemsData.filter(i => i.id_poliza === poliza.id_poliza);
         const card = document.createElement('div');
