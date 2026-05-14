@@ -35,25 +35,22 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <!-- Pestañas principales -->
+        <!-- Pestañas -->
         <div class="flex gap-3 mb-8 border-b border-slate-200 pb-2">
             <button data-tab="recurrente" class="tab-btn active px-5 py-2 text-sm font-semibold rounded-t-lg bg-white text-slate-800 border-b-2 border-indigo-400">Seguros recurrentes</button>
             <button data-tab="evento" class="tab-btn px-5 py-2 text-sm font-semibold rounded-t-lg bg-slate-50 text-slate-600 hover:text-slate-800">Eventos puntuales</button>
         </div>
 
-        <!-- Selector de empresa y filtros rápidos -->
+        <!-- Selector de empresa (orden: Ambas, GHM SRL, GHM Satelital) -->
         <div id="empresaSelectorContainer" class="mb-6">
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="inline-flex rounded-md shadow-sm" role="group">
-                    <button type="button" data-empresa="GHM SRL" class="empresa-btn bg-white text-slate-700 px-4 py-2 text-sm font-medium rounded-l-lg border border-slate-200 hover:bg-slate-50">GHM SRL</button>
-                    <button type="button" data-empresa="GHM Satelital SRL" class="empresa-btn bg-white text-slate-700 px-4 py-2 text-sm font-medium border-t border-b border-slate-200 hover:bg-slate-50">GHM Satelital SRL</button>
-                    <button type="button" data-empresa="Ambas" class="empresa-btn bg-indigo-100 text-indigo-800 px-4 py-2 text-sm font-medium rounded-r-lg border border-indigo-200">Ambas empresas</button>
-                </div>
-                <div id="filtrosRapidos" class="flex flex-wrap gap-2"></div>
+            <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button type="button" data-empresa="Ambas" class="empresa-btn bg-indigo-100 text-indigo-800 px-4 py-2 text-sm font-medium rounded-l-lg border border-indigo-200">Ambas empresas</button>
+                <button type="button" data-empresa="GHM SRL" class="empresa-btn bg-white text-slate-700 px-4 py-2 text-sm font-medium border-t border-b border-slate-200 hover:bg-slate-50">GHM SRL</button>
+                <button type="button" data-empresa="GHM Satelital SRL" class="empresa-btn bg-white text-slate-700 px-4 py-2 text-sm font-medium rounded-r-lg border border-slate-200 hover:bg-slate-50">GHM Satelital SRL</button>
             </div>
         </div>
 
-        <!-- KPIs -->
+        <!-- KPIs (sin cambios) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
             <div class="rounded-3xl p-6 bg-gradient-to-br from-rose-50 to-white border border-rose-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-100/50 rounded-full blur-2xl"></div>
@@ -95,23 +92,26 @@
             </div>
         </div>
 
-        <!-- Listado de tarjetas de pólizas -->
-        <div class="mt-8">
-            <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-1 h-6 bg-indigo-400 rounded-full"></div>
-                    <h2 class="text-lg font-bold text-slate-800">Pólizas</h2>
-                    <span id="polizasCount" class="text-xs bg-slate-100 px-2 py-1 rounded-full font-medium">0</span>
-                </div>
-                <div class="flex gap-2">
-                    <input type="text" id="searchPoliza" placeholder="Buscar por N° póliza, patente, tomador..." class="text-sm border border-slate-200 rounded-xl px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-indigo-200">
-                    <button id="exportCSVBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs flex items-center gap-1 font-medium"><i class="fas fa-download"></i> CSV</button>
-                    <button id="exportExcelBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs flex items-center gap-1 font-medium"><i class="fas fa-file-excel"></i> Excel</button>
-                    <button id="exportPDFBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs flex items-center gap-1 font-medium"><i class="fas fa-file-pdf"></i> PDF</button>
-                </div>
+        <!-- Sección: Resumen de ramos (tarjetas de ramo) -->
+        <div id="ramosSection">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-1 h-6 bg-indigo-400 rounded-full"></div>
+                <h2 class="text-lg font-bold text-slate-800">Resumen por ramo</h2>
             </div>
-            <div id="polizasListContainer" class="space-y-4">
-                <!-- Tarjetas generadas dinámicamente -->
+            <div id="ramosContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <!-- Tarjetas de ramo se generan dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Sección: Pólizas de un ramo (inicialmente oculta) -->
+        <div id="polizasSection" class="hidden">
+            <div class="flex items-center gap-3 mb-4">
+                <button id="backToRamosBtn" class="text-indigo-600 hover:text-indigo-800 text-sm flex items-center gap-1"><i class="fas fa-arrow-left"></i> Volver a ramos</button>
+                <div class="w-1 h-6 bg-indigo-400 rounded-full"></div>
+                <h2 class="text-lg font-bold text-slate-800" id="ramosTitle">Pólizas de <span id="ramoSeleccionadoNombre"></span></h2>
+            </div>
+            <div id="polizasContainer" class="space-y-4">
+                <!-- Tarjetas de póliza del ramo seleccionado -->
             </div>
         </div>
 
