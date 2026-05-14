@@ -1,4 +1,4 @@
-/* style.css - MCV Seguros Dashboard - Panel lateral */
+/* style.css - MCV Seguros Dashboard - Estilo premium pastel */
 * {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
@@ -16,28 +16,18 @@
     border-radius: 10px;
 }
 body {
-    background-color: #f4f6f9;
+    background-color: #f8fafc;
     font-family: 'Inter', sans-serif;
 }
 button, select, input {
     transition: all 0.15s ease;
 }
 button:focus-visible, select:focus-visible, input:focus-visible {
-    outline: 2px solid #60a5fa;
+    outline: 2px solid #a5b4fc;
     outline-offset: 2px;
 }
 canvas {
     max-height: 100%;
-}
-#ramosListContainer .bg-white {
-    transition: all 0.1s;
-}
-#polizasListContainer .bg-white {
-    transition: transform 0.1s ease, box-shadow 0.2s ease;
-}
-#polizasListContainer .bg-white:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 .tab-btn.active {
     background-color: white;
@@ -45,14 +35,34 @@ canvas {
 .empresa-btn {
     transition: all 0.1s;
 }
+#polizasListContainer table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+#polizasListContainer th, #polizasListContainer td {
+    border-bottom: 1px solid #f1f5f9;
+}
+#polizasListContainer tr:hover td {
+    background-color: #f8fafc;
+}
 @media print {
-    body { background: white; font-size: 10pt; }
-    button, .tab-btn, .empresa-btn, #exportCSVBtn, #refreshBtn, #exportPDFBtn, #exportExcelBtn, .ver-bienes-btn, #closeModalBtn, #exportModalItemsBtn {
+    body {
+        background: white;
+        font-size: 10pt;
+    }
+    button, .tab-btn, .empresa-btn, #exportCSVBtn, #refreshBtn, #exportPDFBtn, #exportExcelBtn {
         display: none !important;
     }
-    canvas { max-width: 100%; page-break-inside: avoid; }
+    canvas {
+        max-width: 100%;
+        page-break-inside: avoid;
+    }
 }
-@media (max-width: 1024px) {
-    .grid-cols-1.lg\:grid-cols-12 { grid-template-columns: 1fr; }
-    #ramosListContainer { max-height: 300px; }
+@media (max-width: 768px) {
+    #polizasListContainer {
+        overflow-x: auto;
+    }
+    #polizasListContainer table {
+        min-width: 800px;
+    }
 }
