@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>MCV Seguros | Dashboard Ejecutivo</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -13,20 +13,20 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#f4f6f9] text-gray-700 font-['Inter'] antialiased">
+<body class="bg-slate-50 text-slate-700 font-['Inter'] antialiased selection:bg-indigo-100 selection:text-indigo-900">
 
-    <!-- Header igual -->
-    <div class="border-b border-gray-200 bg-white sticky top-0 z-20 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center flex-wrap gap-3">
+    <!-- Header -->
+    <div class="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-20 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center flex-wrap gap-3">
             <div>
-                <h1 class="text-xl sm:text-2xl font-semibold tracking-tight text-gray-800">MCV Seguros</h1>
-                <p class="text-gray-500 text-xs mt-0.5">Dashboard Ejecutivo · Gestión de seguros recurrentes y eventos puntuales</p>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-800">MCV Seguros</h1>
+                <p class="text-slate-500 text-xs mt-0.5">Dashboard Ejecutivo · Gestión de seguros recurrentes y eventos puntuales</p>
             </div>
             <div class="flex gap-2 sm:gap-3 items-center">
-                <button id="refreshBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 transition px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm flex items-center gap-2">
+                <button id="refreshBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 transition px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm flex items-center gap-2">
                     <i class="fas fa-sync-alt text-xs"></i> Actualizar
                 </button>
-                <div class="bg-gray-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs text-gray-600 border border-gray-200">
+                <div class="bg-slate-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs text-slate-600">
                     <i class="far fa-calendar-alt mr-1"></i>
                     <span id="lastUpdate">--:--</span>
                 </div>
@@ -34,103 +34,111 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <!-- Pestañas principales -->
-        <div class="flex gap-3 mb-6 border-b border-gray-200 pb-2">
-            <button data-tab="recurrente" class="tab-btn active px-4 py-2 text-sm font-medium rounded-t-lg bg-white text-gray-800 border-b-2 border-blue-400">Seguros recurrentes</button>
-            <button data-tab="evento" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg bg-gray-50 text-gray-600 hover:text-gray-800">Eventos puntuales</button>
+        <div class="flex gap-3 mb-8 border-b border-slate-200 pb-2">
+            <button data-tab="recurrente" class="tab-btn active px-5 py-2 text-sm font-semibold rounded-t-lg bg-white text-slate-800 border-b-2 border-indigo-400">Seguros recurrentes</button>
+            <button data-tab="evento" class="tab-btn px-5 py-2 text-sm font-semibold rounded-t-lg bg-slate-50 text-slate-600 hover:text-slate-800">Eventos puntuales</button>
         </div>
 
-        <!-- Selector de empresa y búsqueda (fila superior) -->
-        <div id="empresaSelectorContainer" class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div class="inline-flex rounded-md shadow-sm" role="group">
-                <button type="button" data-empresa="GHM SRL" class="empresa-btn bg-gray-100 text-gray-700 px-4 py-2 text-sm font-medium rounded-l-lg border border-gray-300 hover:bg-gray-200">GHM SRL</button>
-                <button type="button" data-empresa="GHM Satelital SRL" class="empresa-btn bg-gray-100 text-gray-700 px-4 py-2 text-sm font-medium border-t border-b border-gray-300 hover:bg-gray-200">GHM Satelital SRL</button>
-                <button type="button" data-empresa="Ambas" class="empresa-btn bg-blue-100 text-blue-800 px-4 py-2 text-sm font-medium rounded-r-lg border border-blue-300">Ambas empresas</button>
-            </div>
-            <div class="flex gap-2">
-                <input type="text" id="searchPoliza" placeholder="Buscar por N° póliza, patente, tomador..." class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-64">
-                <button id="exportCSVBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"><i class="fas fa-download"></i> CSV</button>
-                <button id="exportExcelBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"><i class="fas fa-file-excel"></i> Excel</button>
-                <button id="exportPDFBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"><i class="fas fa-file-pdf"></i> PDF</button>
+        <!-- Selector de empresa y filtros rápidos -->
+        <div id="empresaSelectorContainer" class="mb-6">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="inline-flex rounded-md shadow-sm" role="group">
+                    <button type="button" data-empresa="GHM SRL" class="empresa-btn bg-white text-slate-700 px-4 py-2 text-sm font-medium rounded-l-lg border border-slate-200 hover:bg-slate-50">GHM SRL</button>
+                    <button type="button" data-empresa="GHM Satelital SRL" class="empresa-btn bg-white text-slate-700 px-4 py-2 text-sm font-medium border-t border-b border-slate-200 hover:bg-slate-50">GHM Satelital SRL</button>
+                    <button type="button" data-empresa="Ambas" class="empresa-btn bg-indigo-100 text-indigo-800 px-4 py-2 text-sm font-medium rounded-r-lg border border-indigo-200">Ambas empresas</button>
+                </div>
+                <div id="filtrosRapidos" class="flex flex-wrap gap-2"></div>
             </div>
         </div>
 
-        <!-- KPIs (4) -->
-        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-            <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <div class="text-gray-500 text-xs uppercase tracking-wider">Gasto mensual</div>
-                <div class="text-2xl sm:text-3xl font-bold mt-1 text-gray-800" id="kpiGastoMensual">$0</div>
-                <div class="text-xs text-gray-400 mt-1" id="kpiGastoDetalle"></div>
+        <!-- KPIs -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
+            <!-- Gasto mensual recurrente -->
+            <div class="rounded-3xl p-6 bg-gradient-to-br from-rose-50 to-white border border-rose-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-100/50 rounded-full blur-2xl"></div>
+                <div class="text-rose-600 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3"><i class="fas fa-wallet"></i> Gasto mensual</div>
+                <div class="text-4xl font-black text-slate-800 tracking-tight relative z-10" id="kpiGastoMensual">$0</div>
+                <div class="text-xs font-medium text-slate-500 mt-2" id="kpiGastoDetalle"></div>
             </div>
-            <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <div class="text-gray-500 text-xs uppercase tracking-wider">Suma asegurada</div>
-                <div class="text-2xl sm:text-3xl font-bold mt-1 text-gray-800" id="kpiSumaAsegurada">$0</div>
+            
+            <!-- Suma asegurada -->
+            <div class="rounded-3xl p-6 bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-100/50 rounded-full blur-2xl"></div>
+                <div class="text-emerald-600 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3"><i class="fas fa-shield-check"></i> Suma asegurada</div>
+                <div class="text-4xl font-black text-slate-800 tracking-tight relative z-10" id="kpiSumaAsegurada">$0</div>
             </div>
-            <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <div class="text-gray-500 text-xs uppercase tracking-wider">Pólizas activas</div>
-                <div class="text-2xl sm:text-3xl font-bold mt-1 text-gray-800" id="kpiPolizasActivas">0</div>
+
+            <!-- Pólizas activas -->
+            <div class="rounded-3xl p-6 bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-100/50 rounded-full blur-2xl"></div>
+                <div class="text-indigo-600 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3"><i class="fas fa-file-contract"></i> Pólizas activas</div>
+                <div class="text-4xl font-black text-slate-800 tracking-tight relative z-10" id="kpiPolizasActivas">0</div>
             </div>
-            <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <div class="text-gray-500 text-xs uppercase tracking-wider">Aseguradoras</div>
-                <div class="text-2xl sm:text-3xl font-bold mt-1 text-gray-800" id="kpiAseguradoras">0</div>
+
+            <!-- Aseguradoras -->
+            <div class="rounded-3xl p-6 bg-gradient-to-br from-amber-50 to-white border border-amber-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-100/50 rounded-full blur-2xl"></div>
+                <div class="text-amber-600 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3"><i class="fas fa-building"></i> Aseguradoras</div>
+                <div class="text-4xl font-black text-slate-800 tracking-tight relative z-10" id="kpiAseguradoras">0</div>
+            </div>
+
+            <!-- Cauciones (nuevo KPI) -->
+            <div class="rounded-3xl p-6 bg-gradient-to-br from-sky-50 to-white border border-sky-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-sky-100/50 rounded-full blur-2xl"></div>
+                <div class="text-sky-600 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3"><i class="fas fa-handshake"></i> Cauciones vigentes</div>
+                <div class="text-4xl font-black text-slate-800 tracking-tight relative z-10" id="kpiCauciones">$0</div>
             </div>
         </div>
 
         <!-- Gráficos (barras horizontales) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <h3 class="font-medium text-gray-700 mb-4 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-blue-400"></i> Gasto mensual por aseguradora</h3>
+            <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                <h3 class="font-semibold text-slate-700 mb-4 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-indigo-400"></i> Gasto mensual por aseguradora</h3>
                 <canvas id="chartGastoAseguradora" height="200"></canvas>
             </div>
-            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <h3 class="font-medium text-gray-700 mb-4 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-blue-400"></i> Gasto mensual por ramo</h3>
+            <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                <h3 class="font-semibold text-slate-700 mb-4 text-sm flex items-center"><i class="fas fa-chart-simple mr-2 text-indigo-400"></i> Gasto mensual por ramo</h3>
                 <canvas id="chartGastoRamo" height="200"></canvas>
             </div>
         </div>
 
-        <!-- Panel de dos columnas: izquierda = ramos, derecha = pólizas -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-            <!-- Panel izquierdo: tarjetas de ramo -->
-            <div class="lg:col-span-3">
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-gray-100 bg-gray-50">
-                        <h3 class="font-semibold text-gray-700 text-sm"><i class="fas fa-tags mr-2 text-blue-400"></i> Ramos</h3>
-                    </div>
-                    <div id="ramosListContainer" class="max-h-[70vh] overflow-y-auto divide-y divide-gray-100">
-                        <!-- Se llena dinámicamente -->
-                    </div>
+        <!-- Tabla de pólizas (con estilo mejorado) -->
+        <div class="mt-8">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-1 h-6 bg-indigo-400 rounded-full"></div>
+                    <h2 class="text-lg font-bold text-slate-800">Pólizas</h2>
+                    <span id="polizasCount" class="text-xs bg-slate-100 px-2 py-1 rounded-full font-medium">0</span>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="searchPoliza" placeholder="Buscar por N° póliza, patente, tomador..." class="text-sm border border-slate-200 rounded-xl px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                    <button id="exportCSVBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs flex items-center gap-1 font-medium"><i class="fas fa-download"></i> CSV</button>
+                    <button id="exportExcelBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs flex items-center gap-1 font-medium"><i class="fas fa-file-excel"></i> Excel</button>
+                    <button id="exportPDFBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs flex items-center gap-1 font-medium"><i class="fas fa-file-pdf"></i> PDF</button>
                 </div>
             </div>
-            <!-- Panel derecho: pólizas del ramo seleccionado -->
-            <div class="lg:col-span-9">
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                        <h3 id="ramoSeleccionadoTitulo" class="font-semibold text-gray-700 text-sm">Seleccione un ramo</h3>
-                        <span id="polizasCount" class="text-xs bg-gray-200 px-2 py-1 rounded-full">0</span>
-                    </div>
-                    <div id="polizasListContainer" class="p-4 max-h-[70vh] overflow-y-auto">
-                        <div class="text-center text-gray-400 py-8">Haga clic en un ramo para ver sus pólizas</div>
-                    </div>
-                </div>
+            <div id="polizasListContainer" class="overflow-x-auto">
+                <!-- La tabla se genera dinámicamente -->
             </div>
         </div>
 
-        <div class="mt-8 text-center text-xs text-gray-400 border-t border-gray-200 pt-6">
+        <div class="mt-12 text-center text-xs text-slate-400 border-t border-slate-200 pt-6">
             <p>Actualizado automáticamente desde Google Sheets · MCV Seguros</p>
         </div>
     </div>
 
     <!-- Modal para bienes -->
-    <div id="modalItems" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-xl">
-            <div class="flex justify-between items-center border-b p-4">
-                <h3 class="font-bold text-lg" id="modalTitle">Bienes asegurados</h3>
-                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+    <div id="modalItems" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-xl">
+            <div class="flex justify-between items-center border-b p-5">
+                <h3 class="font-bold text-lg text-slate-800" id="modalTitle">Bienes asegurados</h3>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <div class="overflow-y-auto p-4" id="modalContent"></div>
-            <div class="border-t p-3 flex justify-end">
-                <button id="exportModalItemsBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs flex items-center gap-1"><i class="fas fa-download"></i> Exportar CSV</button>
+            <div class="overflow-y-auto p-5" id="modalContent"></div>
+            <div class="border-t p-4 flex justify-end gap-3">
+                <button id="exportItemsBtn" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2"><i class="fas fa-download"></i> Exportar estos bienes</button>
             </div>
         </div>
     </div>
