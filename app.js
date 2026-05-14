@@ -1,4 +1,4 @@
-// app.js - MCV Seguros Dashboard - Versión definitiva con todas las correcciones validadas
+// app.js - MCV Seguros Dashboard - Versión definitiva estilo tarjetas
 const POLIZAS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTizUhGOMK4CqFeegbAtWciBpS29ZZ8fvqaednZUMlwOFMZ9lzK0-0PpcJyacyifXeSJazpTIcLqL2q/pub?gid=0&single=true&output=csv';
 const ITEMS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTizUhGOMK4CqFeegbAtWciBpS29ZZ8fvqaednZUMlwOFMZ9lzK0-0PpcJyacyifXeSJazpTIcLqL2q/pub?gid=1897816776&single=true&output=csv';
 
@@ -7,275 +7,19 @@ let itemsData = [];
 let tipoCambioUSD = 1200;
 let charts = {};
 let currentTab = 'recurrente';
-let currentEmpresa = 'GHM SRL';
+let currentEmpresa = 'Ambas';
 let currentRamoFiltro = null;
 let currentPolizaSearch = '';
 
-// ======================== CORRECCIONES (DATOS VALIDADOS PÓLIZA POR PÓLIZA) ========================
-const correcciones = new Map();
+// Cargar preferencia guardada
+const savedEmpresa = localStorage.getItem('mcv_empresa');
+if (savedEmpresa && ['GHM SRL', 'GHM Satelital SRL', 'Ambas'].includes(savedEmpresa)) currentEmpresa = savedEmpresa;
 
-correcciones.set('68280884', {
-    premio_ars: 428549,
-    suma_asegurada_total: 159676000,
-    cobertura_corta: 'Privilegio L2 (completo)',
-    vigencia_desde: '27/04/2026',
-    vigencia_hasta: '27/07/2026',
-    beneficiario: 'GHM Satelital SRL',
-    items: [
-        { item: 'TOYOTA HILUX L/25 2.8 DC 4X4 TDI SRV+ AT6 2026 - AI002UK', identificacion: 'AI002UK', suma_ars: 79838000, suma_usd: 0 },
-        { item: 'TOYOTA HILUX L/25 2.8 DC 4X4 TDI SRV+ AT6 2026 - AI002UJ', identificacion: 'AI002UJ', suma_ars: 79838000, suma_usd: 0 }
-    ]
-});
-correcciones.set('58881286', {
-    premio_ars: 201561.17,
-    suma_asegurada_total: 45000000,
-    cobertura_corta: 'Privilegio L2 (completo)',
-    vigencia_desde: '05/04/2026',
-    vigencia_hasta: '05/07/2026',
-    beneficiario: 'GHM Satelital SRL',
-    items: [
-        { item: 'TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR', identificacion: 'AF353UN', suma_ars: 45000000, suma_usd: 0 }
-    ]
-});
-correcciones.set('58845801', {
-    premio_ars: 184357,
-    suma_asegurada_total: 45000000,
-    cobertura_corta: 'Privilegio L2 para Nissan / Arranque L2 para Trailer',
-    vigencia_desde: '26/02/2026',
-    vigencia_hasta: '26/05/2026',
-    beneficiario: 'GHM Satelital SRL',
-    items: [
-        { item: 'Trailer', identificacion: '101AF981GW', suma_ars: 0, suma_usd: 0, solo_rc: true },
-        { item: 'Nissan Frontier', identificacion: 'AP981GW', suma_ars: 45000000, suma_usd: 0 }
-    ]
-});
-correcciones.set('58881287', {
-    premio_ars: 698123,
-    suma_asegurada_total: 38500000 + 37300000 + 45000000,
-    cobertura_corta: 'Privilegio L2 para autos / Arranque L2 para trailer',
-    vigencia_desde: '05/04/2026',
-    vigencia_hasta: '05/07/2026',
-    beneficiario: 'GHM SRL',
-    items: [
-        { item: 'Toyota Hilux 2019', identificacion: 'AD571CC', suma_ars: 38500000, suma_usd: 0 },
-        { item: 'Toyota Hilux 2017', identificacion: 'AB210EX', suma_ars: 37300000, suma_usd: 0 },
-        { item: 'Toyota Hilux SW4 2018', identificacion: 'AC899XO', suma_ars: 45000000, suma_usd: 0 },
-        { item: 'Trailer', identificacion: '101AB210EX', suma_ars: 0, suma_usd: 0, solo_rc: true }
-    ]
-});
-correcciones.set('58844225', {
-    premio_ars: 15905,
-    suma_asegurada_total: 0,
-    cobertura_corta: 'Arranque L2 (solo RC)',
-    vigencia_desde: '14/02/2026',
-    vigencia_hasta: '14/05/2026',
-    beneficiario: 'GHM Satelital SRL',
-    items: [
-        { item: 'Trailer', identificacion: '101AF353UN', suma_ars: 0, suma_usd: 0, solo_rc: true }
-    ]
-});
-correcciones.set('58844224', {
-    premio_ars: 15905,
-    suma_asegurada_total: 0,
-    cobertura_corta: 'Arranque L2 (solo RC)',
-    vigencia_desde: '14/02/2026',
-    vigencia_hasta: '14/05/2026',
-    beneficiario: 'GHM SRL',
-    items: [
-        { item: 'Trailer', identificacion: '101AD571CC', suma_ars: 0, suma_usd: 0, solo_rc: true }
-    ]
-});
-correcciones.set('67844592', {
-    premio_ars: 15336,
-    suma_asegurada_total: 0,
-    cobertura_corta: 'Arranque L2 (solo RC)',
-    vigencia_desde: '17/02/2026',
-    vigencia_hasta: '17/05/2026',
-    beneficiario: 'GHM Satelital SRL',
-    items: [
-        { item: 'Trailer', identificacion: '101AF981GW', suma_ars: 0, suma_usd: 0, solo_rc: true }
-    ]
-});
-correcciones.set('41789769', {
-    premio_ars: 33358,
-    suma_asegurada_total: 13807159,
-    cobertura_corta: 'Plan Nro. 25 – solo siniestros totales',
-    vigencia_desde: '05/03/2026',
-    vigencia_hasta: '05/06/2026',
-    beneficiario: 'GHM Satelital SRL',
-    items: [
-        { item: 'Cuatriciclo', identificacion: '419HXK', suma_ars: 13807159, suma_usd: 0 }
-    ]
-});
-correcciones.set('45598579', {
-    premio_ars: 57241,
-    suma_asegurada_total: 11246000,
-    cobertura_corta: 'Selecto L2 (completo)',
-    vigencia_desde: '28/02/2026',
-    vigencia_hasta: '31/05/2026',
-    beneficiario: 'GHM Satelital SRL',
-    items: [
-        { item: 'Beta Zontes 368 G', identificacion: 'A269GYK', suma_ars: 11246000, suma_usd: 0 }
-    ]
-});
-correcciones.set('40156645', {
-    premio_ars: 12609,
-    suma_asegurada_total: 4262287 + 5732041,
-    cobertura_corta: 'Seguro Técnico – Equipo de contratista',
-    vigencia_desde: '18/02/2026',
-    vigencia_hasta: '18/08/2026',
-    beneficiario: 'GHM Satelital SRL',
-    items: [
-        { item: 'Moto de nieve SKI DOO 1', identificacion: 'N° serie no especificado', suma_ars: 4262287, suma_usd: 0 },
-        { item: 'Moto de nieve SKI DOO 2', identificacion: 'N° serie no especificado', suma_ars: 5732041, suma_usd: 0 }
-    ]
-});
-correcciones.set('40194044', {
-    premio_ars: 18008,
-    suma_asegurada_total: 1500000,
-    cobertura_corta: 'Robo exclusivo (excluye hurto)',
-    vigencia_desde: '10/01/2026',
-    vigencia_hasta: '10/07/2026',
-    beneficiario: 'GHM SRL',
-    items: [
-        { item: 'Equipos fotográficos', identificacion: 'N/A', suma_ars: 1500000, suma_usd: 0 }
-    ]
-});
-correcciones.set('352086', {
-    premio_ars: 439468,
-    suma_asegurada_total: 0,
-    cobertura_corta: 'ART – Ley 24.557 (riesgos del trabajo)',
-    vigencia_desde: '01/09/2023',
-    vigencia_hasta: '31/12/2026',
-    beneficiario: 'trabajadores',
-    items: [
-        { item: '6 trabajadores', identificacion: 'CIIU 614090', suma_ars: 0, suma_usd: 0, es_prestacional: true }
-    ]
-});
-correcciones.set('350751', {
-    premio_ars: 500164,
-    suma_asegurada_total: 0,
-    cobertura_corta: 'ART – Ley 24.557 (riesgos del trabajo)',
-    vigencia_desde: '01/08/2023',
-    vigencia_hasta: '31/12/2026',
-    beneficiario: 'trabajadores',
-    items: [
-        { item: '14 trabajadores', identificacion: 'CIIU 591110', suma_ars: 0, suma_usd: 0, es_prestacional: true }
-    ]
-});
-correcciones.set('54001250', {
-    premio_ars: 23135.76,
-    suma_asegurada_total: 2400000,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento e invalidez (Provincial San Juan)',
-    vigencia_desde: '01/03/2026',
-    vigencia_hasta: '01/03/2027',
-    beneficiario: 'asegurados',
-    items: [
-        { item: '8 asegurados', identificacion: 'Provincial San Juan', suma_ars: 2400000, suma_usd: 0 }
-    ]
-});
-correcciones.set('54001127', {
-    premio_ars: 18760,
-    suma_asegurada_total: 25968503.98,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento e invalidez (Ley Contrato Trabajo)',
-    vigencia_desde: '01/05/2026',
-    vigencia_hasta: '01/03/2027',
-    beneficiario: 'asegurados',
-    items: [
-        { item: '8 asegurados', identificacion: 'Ley 20.744', suma_ars: 25968503.98, suma_usd: 0 }
-    ]
-});
-correcciones.set('55004187', {
-    premio_ars: 2984.34,
-    suma_asegurada_total: 14499100,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento (Decreto 1567/74)',
-    vigencia_desde: '01/03/2026',
-    vigencia_hasta: '01/03/2027',
-    beneficiario: 'asegurados',
-    items: [
-        { item: '7 asegurados', identificacion: 'No Doméstico', suma_ars: 14499100, suma_usd: 0 }
-    ]
-});
-correcciones.set('54001267', {
-    premio_ars: 3373,
-    suma_asegurada_total: 4200000,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento e invalidez (Provincial San Juan)',
-    vigencia_desde: '01/03/2026',
-    vigencia_hasta: '01/03/2027',
-    beneficiario: 'asegurados',
-    items: [
-        { item: '14 asegurados', identificacion: 'Provincial San Juan', suma_ars: 4200000, suma_usd: 0 }
-    ]
-});
-correcciones.set('54001112', {
-    premio_ars: 63830,
-    suma_asegurada_total: 87302247.98,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento e invalidez (Ley Contrato Trabajo)',
-    vigencia_desde: '01/05/2026',
-    vigencia_hasta: '01/03/2027',
-    beneficiario: 'asegurados',
-    items: [
-        { item: '13 asegurados', identificacion: 'Ley 20.744', suma_ars: 87302247.98, suma_usd: 0 }
-    ]
-});
-correcciones.set('55004186', {
-    premio_ars: 2984.34,
-    suma_asegurada_total: 26926900,
-    cobertura_corta: 'Vida Colectivo – Fallecimiento (Decreto 1567/74)',
-    vigencia_desde: '01/03/2026',
-    vigencia_hasta: '01/03/2027',
-    beneficiario: 'asegurados',
-    items: [
-        { item: '13 asegurados', identificacion: 'No Doméstico', suma_ars: 26926900, suma_usd: 0 }
-    ]
-});
-correcciones.set('4089566', {
-    premio_ars: 36034.08,
-    suma_asegurada_total: 68000000,
-    cobertura_corta: 'RC Comprensiva – Instalación/mantenimiento sistemas de comunicación',
-    vigencia_desde: '26/03/2026',
-    vigencia_hasta: '26/03/2027',
-    beneficiario: 'GHM Satelital SRL',
-    items: []
-});
-correcciones.set('1239222', {
-    premio_ars: 48553.8,
-    suma_asegurada_total: 3165500,
-    cobertura_corta: 'Caución por Adjudicación – Garantía mantenimiento cámaras 4K',
-    vigencia_desde: '15/05/2026',
-    vigencia_hasta: '15/08/2026',
-    beneficiario: 'Gobierno de San Juan',
-    items: [{ item: 'Servicio cámaras 4K', identificacion: 'Expte. 1100-000717-2025', suma_ars: 3165500, suma_usd: 0 }]
-});
-correcciones.set('1234850', {
-    premio_usd: 203.04,
-    suma_asegurada_usd: 27500,
-    cobertura_corta: 'Caución por Anticipo – Stand Fiesta del Sol',
-    vigencia_desde: '11/05/2026',
-    vigencia_hasta: '11/08/2026',
-    beneficiario: 'Minera Andina del Sol',
-    items: [{ item: 'Stand Fiesta del Sol', identificacion: 'Pedido 4501322401', suma_ars: 0, suma_usd: 27500 }]
-});
-correcciones.set('1234845', {
-    premio_usd: 204.36,
-    suma_asegurada_usd: 27694.35,
-    cobertura_corta: 'Caución por Anticipo – Stand Fiesta del Sol',
-    vigencia_desde: '11/05/2026',
-    vigencia_hasta: '11/08/2026',
-    beneficiario: 'Barrick Exploraciones',
-    items: [{ item: 'Stand Fiesta del Sol', identificacion: 'Pedido 4501322193', suma_ars: 0, suma_usd: 27694.35 }]
-});
-correcciones.set('1233958', {
-    premio_ars: 79019.4,
-    suma_asegurada_total: 711100,
-    cobertura_corta: 'Caución por Mantenimiento de Oferta – Garantía cámaras',
-    vigencia_desde: '22/10/2025',
-    vigencia_hasta: '22/01/2026',
-    beneficiario: 'Gobierno de San Juan',
-    items: [{ item: 'Mantenimiento cámaras', identificacion: 'Licitación 04/2025', suma_ars: 711100, suma_usd: 0 }]
-});
+function normalizarNroPoliza(str) {
+    if (!str) return '';
+    return str.toString().replace(/[.,\s]/g, '');
+}
 
-// ======================== FUNCIONES AUXILIARES ========================
 function abreviaturaNumero(num) {
     if (num === undefined || num === null || isNaN(num)) return '$0';
     if (num >= 1e9) return '$' + (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
@@ -324,22 +68,6 @@ function fetchCSV(url) {
     });
 }
 
-function aplicarCorrecciones(poliza, itemsOriginales) {
-    const nro = poliza.nro_poliza;
-    if (!correcciones.has(nro)) return { poliza, items: itemsOriginales };
-    const corr = correcciones.get(nro);
-    if (corr.premio_ars !== undefined) poliza.costo_mensual_ars = corr.premio_ars;
-    if (corr.premio_usd !== undefined) poliza.costo_mensual_usd = corr.premio_usd;
-    if (corr.cobertura_corta) poliza.cobertura_corta = corr.cobertura_corta;
-    if (corr.vigencia_desde) poliza.vigencia_desde = corr.vigencia_desde;
-    if (corr.vigencia_hasta) poliza.vigencia_hasta = corr.vigencia_hasta;
-    if (corr.beneficiario) poliza.beneficiario = corr.beneficiario;
-    poliza.suma_asegurada_total = corr.suma_asegurada_total || 0;
-    let nuevosItems = corr.items || [];
-    if (nuevosItems.length === 0 && itemsOriginales.length > 0) nuevosItems = itemsOriginales;
-    return { poliza, items: nuevosItems };
-}
-
 async function loadAllData() {
     tipoCambioUSD = await obtenerTipoCambio();
     let polCSV = [], itemsCSV = [];
@@ -367,8 +95,7 @@ async function loadAllData() {
             costo_mensual_usd: parseFloat(p['Costo Mensual USD'] || 0),
             vigencia_desde: p['Vigencia Desde'] || '',
             vigencia_hasta: p['Vigencia Hasta (fecha)'] || '',
-            cobertura_corta: '',
-            beneficiario: ''
+            cobertura_corta: p['Cobertura Corta'] || p['cobertura_corta'] || ''
         };
     });
     
@@ -395,27 +122,20 @@ async function loadAllData() {
         return { ...p, empresa, pagador };
     });
     
-    // Aplicar correcciones
-    let nuevosItems = [];
-    polizasData = polizasData.map(p => {
-        const itemsOrg = itemsMap.get(p.id_poliza) || [];
-        const { poliza, items } = aplicarCorrecciones(p, itemsOrg);
-        nuevosItems.push(...items.map(item => ({ ...item, id_poliza: poliza.id_poliza, nro_poliza: poliza.nro_poliza })));
-        return poliza;
-    });
-    itemsData = nuevosItems;
-    
-    // Calcular suma asegurada total por póliza
+    // Calcular suma asegurada total por póliza (suma de items)
     const sumaPorPoliza = new Map();
-    itemsData.forEach(item => {
-        const key = item.id_poliza;
-        const suma = (item.suma_asegurada_ars || 0) + (item.suma_asegurada_usd || 0) * tipoCambioUSD;
-        sumaPorPoliza.set(key, (sumaPorPoliza.get(key) || 0) + suma);
-    });
+    for (const pol of polizasData) {
+        const items = itemsMap.get(pol.id_poliza) || [];
+        let suma = 0;
+        for (const item of items) {
+            suma += (item.suma_asegurada_ars || 0) + (item.suma_asegurada_usd || 0) * tipoCambioUSD;
+        }
+        sumaPorPoliza.set(pol.id_poliza, suma);
+    }
     polizasData = polizasData.map(p => ({
         ...p,
         suma_asegurada_total: sumaPorPoliza.get(p.id_poliza) || 0,
-        cantidad_items: itemsData.filter(i => i.id_poliza === p.id_poliza).length
+        cantidad_items: (itemsMap.get(p.id_poliza) || []).length
     }));
     
     renderCurrentTab();
@@ -427,6 +147,7 @@ function getPolizasFiltradas() {
     if (currentTab === 'recurrente') {
         if (currentEmpresa === 'GHM SRL') base = base.filter(p => p.empresa === 'GHM SRL');
         else if (currentEmpresa === 'GHM Satelital SRL') base = base.filter(p => p.empresa === 'GHM Satelital SRL');
+        // Ambas no filtra
     }
     if (currentRamoFiltro) base = base.filter(p => p.ramo === currentRamoFiltro);
     if (currentPolizaSearch) {
@@ -446,13 +167,8 @@ function renderCurrentTab() {
     const polizas = getPolizasFiltradas();
     updateKPIs(polizas);
     updateCharts(polizas);
-    renderRamoCards(polizas);
-    if (currentRamoFiltro) {
-        renderPolizasDetail(polizas);
-        document.getElementById('polizasDetailContainer').classList.remove('hidden');
-    } else {
-        document.getElementById('polizasDetailContainer').classList.add('hidden');
-    }
+    renderFiltrosRapidos(polizas);
+    renderPolizasCards(polizas);
 }
 
 function updateKPIs(polizas) {
@@ -470,9 +186,8 @@ function updateKPIs(polizas) {
     document.getElementById('kpiSumaAsegurada').innerHTML = abreviaturaNumero(sumaAsegurada);
     document.getElementById('kpiPolizasActivas').innerHTML = polizas.length;
     document.getElementById('kpiAseguradoras').innerHTML = aseguradorasSet.size;
+    document.getElementById('polizasCount').innerHTML = polizas.length;
 }
-
-let chartTypes = { gastoAseguradora: 'bar', gastoRamo: 'bar', patrimonioAseguradora: 'bar' };
 
 function updateCharts(polizas) {
     const gastoAseguradora = {};
@@ -480,141 +195,110 @@ function updateCharts(polizas) {
         const costo = (p.costo_mensual_ars || 0) + (p.costo_mensual_usd || 0) * tipoCambioUSD;
         gastoAseguradora[p.aseguradora] = (gastoAseguradora[p.aseguradora] || 0) + costo;
     }
-    renderChart('chartGastoAseguradora', 'gastoAseguradora', gastoAseguradora, 'Gasto mensual ARS');
+    renderBarChart('chartGastoAseguradora', gastoAseguradora, 'Gasto mensual ARS');
+    
     const gastoRamo = {};
     for (const p of polizas) {
         const costo = (p.costo_mensual_ars || 0) + (p.costo_mensual_usd || 0) * tipoCambioUSD;
         gastoRamo[p.ramo] = (gastoRamo[p.ramo] || 0) + costo;
     }
-    renderChart('chartGastoRamo', 'gastoRamo', gastoRamo, 'Gasto mensual ARS');
-    const sumaAseguradora = {};
-    for (const p of polizas) {
-        sumaAseguradora[p.aseguradora] = (sumaAseguradora[p.aseguradora] || 0) + (p.suma_asegurada_total || 0);
-    }
-    renderChart('chartPatrimonioAseguradora', 'patrimonioAseguradora', sumaAseguradora, 'Suma asegurada ARS');
+    renderBarChart('chartGastoRamo', gastoRamo, 'Gasto mensual ARS');
 }
 
-function renderChart(canvasId, chartKey, dataObj, label) {
+function renderBarChart(canvasId, dataObj, label) {
     const ctx = document.getElementById(canvasId).getContext('2d');
     const labels = Object.keys(dataObj);
     const values = Object.values(dataObj);
-    if (charts[chartKey]) charts[chartKey].destroy();
-    if (chartTypes[chartKey] === 'pie') {
-        charts[chartKey] = new Chart(ctx, { type: 'pie', data: { labels, datasets: [{ data: values, backgroundColor: ['#a5f3fc','#bbf7d0','#fed7aa','#fbcfe8','#c7d2fe','#fecaca','#d9f99d'] }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (tooltipItem) => `${tooltipItem.label}: ${abreviaturaNumero(tooltipItem.raw)}` } } } } });
-    } else {
-        charts[chartKey] = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label, data: values, backgroundColor: '#a5f3fc', borderRadius: 8 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: true } });
-    }
+    if (charts[canvasId]) charts[canvasId].destroy();
+    charts[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label, data: values, backgroundColor: '#93c5fd', borderRadius: 6 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
+    });
 }
 
-function renderRamoCards(polizas) {
-    const ramosMap = new Map();
-    for (const poliza of polizas) {
-        if (!ramosMap.has(poliza.ramo)) ramosMap.set(poliza.ramo, []);
-        ramosMap.get(poliza.ramo).push(poliza);
-    }
-    const ramosArray = [];
-    for (const [ramo, pols] of ramosMap.entries()) {
-        let gastoARS = 0, gastoUSD = 0, sumaAsegurada = 0;
-        const allItems = [];
-        for (const p of pols) {
-            gastoARS += p.costo_mensual_ars;
-            gastoUSD += p.costo_mensual_usd * tipoCambioUSD;
-            sumaAsegurada += p.suma_asegurada_total;
-            const itemsPol = itemsData.filter(i => i.id_poliza === p.id_poliza);
-            allItems.push(...itemsPol.map(i => i.item));
-        }
-        const uniqueItems = [...new Set(allItems)];
-        const resumenBienes = uniqueItems.slice(0,3).join(', ') + (uniqueItems.length>3 ? ` +${uniqueItems.length-3} más` : (uniqueItems.length===0 ? 'Sin bienes individuales' : ''));
-        ramosArray.push({ ramo, polizas: pols, gastoARS, gastoUSD, sumaAsegurada, cantidadPolizas: pols.length, resumenBienes });
-    }
-    ramosArray.sort((a,b) => (b.gastoARS+b.gastoUSD) - (a.gastoARS+a.gastoUSD));
-    const container = document.getElementById('ramoCardsContainer');
+function renderFiltrosRapidos(polizas) {
+    const ramosUnicos = [...new Set(polizas.map(p => p.ramo))].sort();
+    const container = document.getElementById('filtrosRapidos');
+    if (!container) return;
     container.innerHTML = '';
-    const searchTerm = document.getElementById('searchRamo')?.value.toLowerCase() || '';
-    for (const rd of ramosArray) {
-        if (searchTerm && !rd.ramo.toLowerCase().includes(searchTerm)) continue;
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl p-4 border border-[#e2e8f0] shadow-sm cursor-pointer hover:shadow-md transition';
-        card.setAttribute('data-ramo', rd.ramo);
-        card.addEventListener('click', () => {
-            currentRamoFiltro = rd.ramo;
-            currentPolizaSearch = '';
-            document.getElementById('searchPoliza').value = '';
+    ramosUnicos.forEach(ramo => {
+        const btn = document.createElement('button');
+        btn.className = `text-xs px-3 py-1 rounded-full border ${currentRamoFiltro === ramo ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'}`;
+        btn.textContent = ramo;
+        btn.addEventListener('click', () => {
+            currentRamoFiltro = (currentRamoFiltro === ramo) ? null : ramo;
             renderCurrentTab();
-            document.getElementById('polizasDetailContainer').scrollIntoView({ behavior: 'smooth' });
         });
-        const icon = getIconForRamo(rd.ramo);
-        card.innerHTML = `
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <i class="${icon} text-xl text-[#38bdf8]"></i>
-                    <span class="font-semibold text-base">${rd.ramo}</span>
-                </div>
-                <span class="text-xs bg-gray-100 px-2 py-1 rounded-full">${rd.cantidadPolizas} pólizas</span>
-            </div>
-            <div class="text-sm text-gray-600 mb-1">
-                <div>Gasto ARS: ${abreviaturaNumero(rd.gastoARS)}</div>
-                ${rd.gastoUSD > 0 ? `<div>Gasto USD: ${abreviaturaNumero(rd.gastoUSD)}</div>` : ''}
-            </div>
-            <div class="text-sm font-medium text-gray-700 mb-1">Suma asegurada: ${abreviaturaNumero(rd.sumaAsegurada)}</div>
-            <div class="text-xs text-gray-500 truncate" title="${rd.resumenBienes}">📦 ${rd.resumenBienes}</div>
-        `;
-        container.appendChild(card);
+        container.appendChild(btn);
+    });
+    if (currentRamoFiltro) {
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'text-xs px-3 py-1 rounded-full bg-gray-200 text-gray-600';
+        clearBtn.textContent = '✖ Limpiar filtro';
+        clearBtn.addEventListener('click', () => {
+            currentRamoFiltro = null;
+            renderCurrentTab();
+        });
+        container.appendChild(clearBtn);
     }
 }
 
-function getIconForRamo(ramo) {
-    const r = ramo.toLowerCase();
-    if (r.includes('automotor')) return 'fas fa-car';
-    if (r.includes('art')) return 'fas fa-briefcase-medical';
-    if (r.includes('vida')) return 'fas fa-heartbeat';
-    if (r.includes('rc')) return 'fas fa-shield-alt';
-    if (r.includes('caución')) return 'fas fa-handshake';
-    if (r.includes('robo')) return 'fas fa-lock';
-    return 'fas fa-file-alt';
-}
-
-function renderPolizasDetail(polizasFiltradas) {
+function renderPolizasCards(polizas) {
     const container = document.getElementById('polizasListContainer');
     container.innerHTML = '';
-    document.getElementById('ramoSeleccionadoTitulo').innerText = currentRamoFiltro || 'Todas';
-    for (const poliza of polizasFiltradas) {
+    for (const poliza of polizas) {
         const items = itemsData.filter(i => i.id_poliza === poliza.id_poliza);
-        const displayNumber = poliza.nro_poliza || poliza.id_poliza;
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl border border-[#e2e8f0] shadow-sm overflow-hidden';
+        card.className = 'bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition';
         const header = document.createElement('div');
-        header.className = 'p-4 flex flex-wrap justify-between items-center cursor-pointer hover:bg-gray-50 transition';
+        header.className = 'p-4 cursor-pointer';
         header.innerHTML = `
-            <div class="flex items-center gap-3">
-                <i class="fas fa-chevron-right text-gray-400 expand-icon-politica"></i>
+            <div class="flex justify-between items-start">
                 <div>
-                    <div class="font-mono text-base font-bold text-[#1e293b]">${displayNumber}</div>
-                    <div class="text-xs text-gray-500">${poliza.aseguradora}</div>
+                    <div class="font-mono text-sm font-bold text-gray-800">${poliza.nro_poliza || poliza.id_poliza}</div>
+                    <div class="text-xs text-gray-500 mt-1">${poliza.aseguradora}</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm font-semibold text-gray-800">${poliza.costo_mensual_ars ? '$'+poliza.costo_mensual_ars.toLocaleString() : '$0'} <span class="text-xs font-normal text-gray-500">ARS/mes</span></div>
+                    ${poliza.costo_mensual_usd ? `<div class="text-xs text-gray-500">${poliza.costo_mensual_usd.toLocaleString()} USD/mes</div>` : ''}
                 </div>
             </div>
-            <div class="flex flex-wrap gap-4 text-sm">
-                <div><span class="text-gray-500">Cobertura:</span> <span class="font-medium text-gray-800">${poliza.cobertura_corta || 'No especificada'}</span></div>
-                <div><span class="text-gray-500"><i class="fas fa-dollar-sign text-xs"></i> ARS:</span> <span class="font-medium">${poliza.costo_mensual_ars ? poliza.costo_mensual_ars.toLocaleString() : '0'}</span></div>
-                ${poliza.costo_mensual_usd ? `<div><span class="text-gray-500"><i class="fas fa-dollar-sign text-xs"></i> USD:</span> <span class="font-medium">${poliza.costo_mensual_usd.toLocaleString()}</span></div>` : ''}
-                <div><span class="text-gray-500">Suma asegurada:</span> <span class="font-medium">${abreviaturaNumero(poliza.suma_asegurada_total)}</span></div>
-                <div><span class="text-gray-500"># Bienes:</span> ${poliza.cantidad_items}</div>
+            <div class="mt-2 flex flex-wrap gap-2 text-xs">
+                <span class="bg-gray-100 px-2 py-1 rounded-full">${poliza.ramo}</span>
+                <span class="bg-gray-100 px-2 py-1 rounded-full">Suma asegurada: ${abreviaturaNumero(poliza.suma_asegurada_total)}</span>
+            </div>
+            <div class="mt-2 text-xs text-gray-600 line-clamp-2">${poliza.cobertura_corta || 'Sin cobertura específica'}</div>
+            <div class="mt-3 flex justify-end">
+                <span class="text-xs text-blue-500 flex items-center gap-1"><i class="fas fa-chevron-down expand-icon text-xs"></i> Ver bienes (${poliza.cantidad_items})</span>
             </div>
         `;
         const body = document.createElement('div');
-        body.className = 'hidden border-t border-[#e2e8f0] p-4 bg-gray-50';
+        body.className = 'hidden border-t border-gray-100 p-4 bg-gray-50';
         if (items.length === 0) {
             body.innerHTML = '<p class="text-gray-500 text-sm">No hay bienes registrados.</p>';
         } else {
-            let tableHtml = `<table class="min-w-full text-sm"><thead class="bg-gray-100"><tr><th class="text-left py-2">Ítem asegurado</th><th class="text-left">Identificación</th><th class="text-right">Suma ARS</th><th class="text-right">Suma USD</th></tr></thead><tbody>`;
+            let tableHtml = `<table class="min-w-full text-xs"><thead><tr><th class="text-left py-1">Ítem</th><th class="text-left">Identificación</th><th class="text-right">Suma ARS</th><th class="text-right">Suma USD</th></tr></thead><tbody>`;
             for (const item of items) {
-                tableHtml += `<tr class="border-b"><td class="py-2">${item.item||'-'}</td><td class="py-2">${item.identificacion||'-'}</td><td class="py-2 text-right">${item.suma_asegurada_ars ? '$'+item.suma_asegurada_ars.toLocaleString() : '$0'}</td><td class="py-2 text-right">${item.suma_asegurada_usd ? '$'+item.suma_asegurada_usd.toLocaleString() : '-'}</td></tr>`;
+                tableHtml += `<tr class="border-b"><td class="py-1">${item.item||'-'}</td><td class="py-1">${item.identificacion||'-'}</td><td class="py-1 text-right">${item.suma_asegurada_ars ? '$'+item.suma_asegurada_ars.toLocaleString() : '$0'}</td><td class="py-1 text-right">${item.suma_asegurada_usd ? '$'+item.suma_asegurada_usd.toLocaleString() : '-'}</td></tr>`;
             }
             tableHtml += `</tbody></table>`;
             body.innerHTML = tableHtml;
         }
-        card.appendChild(header); card.appendChild(body);
-        header.addEventListener('click', (e) => { e.stopPropagation(); body.classList.toggle('hidden'); const icon = header.querySelector('.expand-icon-politica'); if (body.classList.contains('hidden')) { icon.classList.remove('fa-chevron-down'); icon.classList.add('fa-chevron-right'); } else { icon.classList.remove('fa-chevron-right'); icon.classList.add('fa-chevron-down'); } });
+        card.appendChild(header);
+        card.appendChild(body);
+        header.addEventListener('click', (e) => {
+            e.stopPropagation();
+            body.classList.toggle('hidden');
+            const icon = header.querySelector('.expand-icon');
+            if (body.classList.contains('hidden')) {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            } else {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            }
+        });
         container.appendChild(card);
     }
 }
@@ -624,15 +308,32 @@ function exportToCSV() {
     const itemsToExport = [];
     for (const poliza of polizasAEportar) {
         const itemsPol = itemsData.filter(i => i.id_poliza === poliza.id_poliza);
-        for (const item of itemsPol) itemsToExport.push({ item: item.item, identificacion: item.identificacion, tomador: poliza.tomador, aseguradora: poliza.aseguradora, ramo: poliza.ramo, vigencia_desde: poliza.vigencia_desde, vigencia_hasta: poliza.vigencia_hasta, suma_asegurada_ars: item.suma_asegurada_ars, costo_mensual_ars: poliza.costo_mensual_ars });
+        for (const item of itemsPol) {
+            itemsToExport.push({
+                'Ítem Asegurado': item.item,
+                'Identificación': item.identificacion,
+                'Empresa (Tomador)': poliza.tomador,
+                'Aseguradora': poliza.aseguradora,
+                'Ramo': poliza.ramo,
+                'Vigencia Desde': poliza.vigencia_desde,
+                'Vigencia Hasta': poliza.vigencia_hasta,
+                'Suma Asegurada ARS': item.suma_asegurada_ars,
+                'Costo Mensual ARS (póliza)': poliza.costo_mensual_ars
+            });
+        }
     }
     const headers = ['Ítem Asegurado','Identificación','Empresa (Tomador)','Aseguradora','Ramo','Vigencia Desde','Vigencia Hasta','Suma Asegurada ARS','Costo Mensual ARS (póliza)'];
-    const rows = itemsToExport.map(i => [i.item, i.identificacion, i.tomador, i.aseguradora, i.ramo, i.vigencia_desde, i.vigencia_hasta, i.suma_asegurada_ars, i.costo_mensual_ars]);
+    const rows = itemsToExport.map(i => [i['Ítem Asegurado'], i['Identificación'], i['Empresa (Tomador)'], i['Aseguradora'], i['Ramo'], i['Vigencia Desde'], i['Vigencia Hasta'], i['Suma Asegurada ARS'], i['Costo Mensual ARS (póliza)']]);
     const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a'); const url = URL.createObjectURL(blob);
-    link.href = url; link.setAttribute('download', `items_mcv_${currentTab}_${currentEmpresa}_${new Date().toISOString().slice(0,19)}.csv`);
-    document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', `items_mcv_${currentTab}_${currentEmpresa}_${new Date().toISOString().slice(0,19)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
 
 function exportToExcel() {
@@ -675,48 +376,47 @@ async function exportToPDF() {
     } catch(e) { console.warn(e); alert('Error generando PDF'); }
 }
 
-function expandAll() {
-    const allBodies = document.querySelectorAll('#polizasListContainer .bg-white > div:last-child');
-    const allIcons = document.querySelectorAll('#polizasListContainer .expand-icon-politica');
-    allBodies.forEach(body => body.classList.remove('hidden'));
-    allIcons.forEach(icon => {
-        icon.classList.remove('fa-chevron-right');
-        icon.classList.add('fa-chevron-down');
-    });
-}
-
-// ======================== EVENTOS E INICIALIZACIÓN ========================
 document.addEventListener('DOMContentLoaded', () => {
     loadAllData();
     document.getElementById('refreshBtn')?.addEventListener('click', loadAllData);
     document.getElementById('exportCSVBtn')?.addEventListener('click', exportToCSV);
-    document.getElementById('exportPDFBtn')?.addEventListener('click', exportToPDF);
     document.getElementById('exportExcelBtn')?.addEventListener('click', exportToExcel);
-    document.getElementById('expandAllBtn')?.addEventListener('click', expandAll);
-    document.getElementById('limpiarFiltroBtn')?.addEventListener('click', () => { currentRamoFiltro = null; currentPolizaSearch = ''; document.getElementById('searchPoliza').value = ''; renderCurrentTab(); });
-    document.getElementById('searchRamo')?.addEventListener('input', () => { const polizas = getPolizasFiltradas(); renderRamoCards(polizas); });
-    document.getElementById('searchPoliza')?.addEventListener('input', (e) => { currentPolizaSearch = e.target.value; renderCurrentTab(); });
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active','border-b-2','border-[#38bdf8]','text-[#1e293b]'); b.classList.add('bg-gray-50','text-gray-600'); });
-        btn.classList.add('active','border-b-2','border-[#38bdf8]','text-[#1e293b]','bg-white'); btn.classList.remove('bg-gray-50','text-gray-600');
-        currentTab = btn.getAttribute('data-tab'); currentRamoFiltro = null; currentPolizaSearch = ''; document.getElementById('searchPoliza').value = '';
-        document.getElementById('empresaSelectorContainer').style.display = currentTab === 'recurrente' ? 'block' : 'none';
+    document.getElementById('exportPDFBtn')?.addEventListener('click', exportToPDF);
+    document.getElementById('searchPoliza')?.addEventListener('input', (e) => {
+        currentPolizaSearch = e.target.value;
         renderCurrentTab();
-    }));
-    document.querySelectorAll('.empresa-btn').forEach(btn => btn.addEventListener('click', () => {
-        document.querySelectorAll('.empresa-btn').forEach(b => b.classList.remove('active','bg-[#bbf7d0]','bg-[#fef9c3]','bg-[#e2e8f0]'));
-        btn.classList.add('active');
-        if (btn.getAttribute('data-empresa') === 'GHM SRL') { btn.classList.add('bg-[#bbf7d0]'); currentEmpresa = 'GHM SRL'; }
-        else if (btn.getAttribute('data-empresa') === 'GHM Satelital SRL') { btn.classList.add('bg-[#fef9c3]'); currentEmpresa = 'GHM Satelital SRL'; }
-        else { btn.classList.add('bg-[#e2e8f0]'); currentEmpresa = 'Ambas'; }
-        currentRamoFiltro = null; currentPolizaSearch = ''; document.getElementById('searchPoliza').value = '';
-        renderCurrentTab();
-    }));
-    document.querySelectorAll('.toggleChartBtn').forEach(btn => btn.addEventListener('click', () => {
-        const chartKey = btn.getAttribute('data-chart');
-        if (chartTypes[chartKey] === 'bar') chartTypes[chartKey] = 'pie';
-        else chartTypes[chartKey] = 'bar';
-        const polizas = getPolizasFiltradas();
-        updateCharts(polizas);
-    }));
+    });
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'border-b-2', 'border-blue-400', 'text-gray-800'));
+            btn.classList.add('active', 'border-b-2', 'border-blue-400', 'text-gray-800');
+            currentTab = btn.getAttribute('data-tab');
+            currentRamoFiltro = null;
+            currentPolizaSearch = '';
+            document.getElementById('searchPoliza').value = '';
+            document.getElementById('empresaSelectorContainer').style.display = currentTab === 'recurrente' ? 'block' : 'none';
+            renderCurrentTab();
+        });
+    });
+    
+    document.querySelectorAll('.empresa-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const empresa = btn.getAttribute('data-empresa');
+            currentEmpresa = empresa;
+            localStorage.setItem('mcv_empresa', empresa);
+            document.querySelectorAll('.empresa-btn').forEach(b => {
+                b.classList.remove('bg-blue-100', 'text-blue-800', 'border-blue-300');
+                b.classList.add('bg-gray-100', 'text-gray-700', 'border-gray-300');
+            });
+            btn.classList.remove('bg-gray-100', 'text-gray-700', 'border-gray-300');
+            btn.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-300');
+            currentRamoFiltro = null;
+            currentPolizaSearch = '';
+            renderCurrentTab();
+        });
+    });
+    
+    const empresaBtn = Array.from(document.querySelectorAll('.empresa-btn')).find(btn => btn.getAttribute('data-empresa') === currentEmpresa);
+    if (empresaBtn) empresaBtn.click();
 });
